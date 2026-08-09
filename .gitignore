@@ -1,0 +1,6 @@
+# SOPS/age — nunca versionar material privado ou descriptografado
+*.agekey
+keys.txt
+*.dec.yaml
+*.plain.yaml
+apps/02-storage/secrets/*.tmp
