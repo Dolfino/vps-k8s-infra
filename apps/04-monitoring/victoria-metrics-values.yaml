@@ -1,0 +1,27 @@
+server:
+  fullnameOverride: victoria-metrics
+  mode: statefulSet
+  replicaCount: 1
+
+  retentionPeriod: 15d
+
+  persistentVolume:
+    enabled: true
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+  scrape:
+    enabled: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  extraArgs:
+    loggerFormat: json

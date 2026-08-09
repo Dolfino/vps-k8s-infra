@@ -1,0 +1,41 @@
+fullnameOverride: kube-state-metrics
+
+prometheusScrape: true
+
+collectors:
+  - daemonsets
+  - deployments
+  - ingresses
+  - jobs
+  - namespaces
+  - nodes
+  - persistentvolumeclaims
+  - persistentvolumes
+  - pods
+  - replicasets
+  - services
+  - statefulsets
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL

@@ -1,0 +1,63 @@
+fullnameOverride: grafana
+
+admin:
+  existingSecret: grafana-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
+persistence:
+  enabled: true
+  type: pvc
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - grafana.local
+  path: /
+  pathType: Prefix
+
+grafana.ini:
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+  users:
+    allow_sign_up: false
+  auth.anonymous:
+    enabled: false
+  server:
+    root_url: http://grafana.local:8080/
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        uid: victoriametrics
+        type: prometheus
+        access: proxy
+        url: http://victoria-metrics.monitoring.svc.cluster.local:8428
+        isDefault: true
+        editable: false
+        jsonData:
+          httpMethod: POST
+          timeInterval: 15s
+
+testFramework:
+  enabled: false

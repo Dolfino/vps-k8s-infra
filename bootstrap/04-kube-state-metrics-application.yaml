@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-state-metrics
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-state-metrics
+      targetRevision: 8.2.0
+      helm:
+        releaseName: kube-state-metrics
+        valueFiles:
+          - $values/apps/04-monitoring/kube-state-metrics-values.yaml
+
+    - repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=true
