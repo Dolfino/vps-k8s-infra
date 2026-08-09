@@ -1,5 +1,5 @@
 alerting:
-  sre-rules.yaml:
+  rules.yaml:
     apiVersion: 1
     groups:
       - orgId: 1
