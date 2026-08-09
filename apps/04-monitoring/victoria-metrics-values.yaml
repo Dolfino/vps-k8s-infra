@@ -30,12 +30,5 @@ server:
     - job_name: 'kube-state-metrics'
       honor_labels: true
       metrics_path: '/metrics'
-      kubernetes_sd_configs:
-        - role: service
-          namespaces:
-            names:
-              - monitoring
-      relabel_configs:
-        - action: keep
-          source_labels: [__meta_kubernetes_service_name]
-          regex: kube-state-metrics
+      static_configs:
+        - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
