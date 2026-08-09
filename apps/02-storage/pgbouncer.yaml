@@ -25,6 +25,8 @@ metadata:
     app.kubernetes.io/name: pgbouncer
     app.kubernetes.io/component: connection-pooler
     app.kubernetes.io/part-of: storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 1
 
@@ -77,6 +79,9 @@ spec:
               value: "5432"
 
             - name: DB_NAME
+              value: "*"
+
+            - name: HEALTH_DB
               valueFrom:
                 secretKeyRef:
                   name: postgres-auth
@@ -85,14 +90,14 @@ spec:
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: postgres-auth
-                  key: POSTGRES_USER
+                  name: pgbouncer-auth
+                  key: PGBOUNCER_AUTH_USER
 
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-auth
-                  key: POSTGRES_PASSWORD
+                  name: pgbouncer-auth
+                  key: PGBOUNCER_AUTH_PASSWORD
 
             # Listener do PgBouncer
             - name: LISTEN_ADDR
@@ -105,11 +110,26 @@ spec:
             - name: AUTH_TYPE
               value: scram-sha-256
 
+            - name: AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pgbouncer-auth
+                  key: PGBOUNCER_AUTH_USER
+
+            - name: AUTH_DBNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth
+                  key: POSTGRES_DB
+
+            - name: AUTH_QUERY
+              value: SELECT username, password FROM pgbouncer.get_auth($1)
+
             - name: ADMIN_USERS
-              value: platform_admin
+              value: pgbouncer_auth
 
             - name: STATS_USERS
-              value: platform_admin
+              value: pgbouncer_auth
 
             # Estratégia de pooling
             - name: POOL_MODE
@@ -201,7 +221,7 @@ spec:
                   -h 127.0.0.1
                   -p 5432
                   -U "$DB_USER"
-                  -d "$DB_NAME"
+                  -d "$HEALTH_DB"
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 30
@@ -216,7 +236,7 @@ spec:
                   -h 127.0.0.1
                   -p 5432
                   -U "$DB_USER"
-                  -d "$DB_NAME"
+                  -d "$HEALTH_DB"
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6

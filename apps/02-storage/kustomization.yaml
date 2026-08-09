@@ -5,6 +5,7 @@ namespace: storage
 
 resources:
   - postgres.yaml
+  - database-bootstrap.yaml
   - pgbouncer.yaml
   - redis.yaml
   - minio.yaml
