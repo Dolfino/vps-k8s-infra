@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-targets
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+    targetRevision: main
+    path: apps/04-monitoring/targets
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
