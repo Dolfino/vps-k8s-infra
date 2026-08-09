@@ -155,3 +155,6 @@ server:
         static_configs:
           - targets:
               - traefik-metrics.kube-system.svc.cluster.local:9100
+            labels:
+              job: traefik
+              target_type: static
