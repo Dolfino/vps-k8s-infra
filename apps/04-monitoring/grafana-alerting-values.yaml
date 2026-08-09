@@ -1,6 +1,11 @@
 alerting:
   rules.yaml:
     apiVersion: 1
+    deleteRules:
+      - orgId: 1
+        uid: pvc-usage-high
+      - orgId: 1
+        uid: pvc-usage-critical
     groups:
       - orgId: 1
         name: SREAlertRules
@@ -25,12 +30,12 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: "up == 0"
+                  expr: "up"
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
-              - refId: C
+              - refId: B
                 datasourceUid: __expr__
                 relativeTimeRange:
                   from: 300
@@ -38,8 +43,7 @@ alerting:
                 model:
                   conditions:
                     - evaluator:
-                        params:
-                          - 0
+                        params: []
                         type: gt
                       operator:
                         type: and
@@ -54,6 +58,32 @@ alerting:
                     type: __expr__
                     uid: __expr__
                   expression: A
+                  reducer: last
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
                   type: threshold
 
           - uid: evolution-api-not-ready
@@ -74,12 +104,12 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: 'kube_deployment_status_replicas_available{namespace="business",deployment="evolution-api"} < 1'
+                  expr: 'kube_deployment_status_replicas_available{namespace="business",deployment="evolution-api"}'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
-              - refId: C
+              - refId: B
                 datasourceUid: __expr__
                 relativeTimeRange:
                   from: 300
@@ -87,8 +117,7 @@ alerting:
                 model:
                   conditions:
                     - evaluator:
-                        params:
-                          - 0
+                        params: []
                         type: gt
                       operator:
                         type: and
@@ -103,6 +132,32 @@ alerting:
                     type: __expr__
                     uid: __expr__
                   expression: A
+                  reducer: last
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
                   type: threshold
 
           - uid: pod-restart-loop
@@ -123,12 +178,12 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: 'increase(kube_pod_container_status_restarts_total[15m]) >= 3'
+                  expr: 'increase(kube_pod_container_status_restarts_total[15m])'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
-              - refId: C
+              - refId: B
                 datasourceUid: __expr__
                 relativeTimeRange:
                   from: 900
@@ -136,8 +191,7 @@ alerting:
                 model:
                   conditions:
                     - evaluator:
-                        params:
-                          - 0
+                        params: []
                         type: gt
                       operator:
                         type: and
@@ -152,6 +206,32 @@ alerting:
                     type: __expr__
                     uid: __expr__
                   expression: A
+                  reducer: last
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 3
+                        type: gte
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
                   type: threshold
 
           - uid: ingress-5xx-rate-high
@@ -163,7 +243,7 @@ alerting:
             labels:
               severity: critical
             annotations:
-              summary: "Taxa de erro 5xx do Ingress Traefik acima de 5%"
+              summary: "Taxa de erro 5xx da Evolution API Ingress acima de 5%"
             data:
               - refId: A
                 datasourceUid: victoriametrics
@@ -172,12 +252,12 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: '(sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m]))) > 0.05 and (sum(rate(traefik_entrypoint_requests_total[5m])) > 0.1)'
+                  expr: '(sum(rate(traefik_service_requests_total{service="business-evolution-api-8080@kubernetes",code=~"5.."}[5m])) / clamp_min(sum(rate(traefik_service_requests_total{service="business-evolution-api-8080@kubernetes"}[5m])), 0.001)) * 100'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
-              - refId: C
+              - refId: B
                 datasourceUid: __expr__
                 relativeTimeRange:
                   from: 300
@@ -185,8 +265,7 @@ alerting:
                 model:
                   conditions:
                     - evaluator:
-                        params:
-                          - 0
+                        params: []
                         type: gt
                       operator:
                         type: and
@@ -201,10 +280,36 @@ alerting:
                     type: __expr__
                     uid: __expr__
                   expression: A
+                  reducer: last
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 5
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
                   type: threshold
 
-          - uid: pvc-usage-high
-            title: PVCUsageHigh
+          - uid: pvc-not-bound
+            title: PVCNotBound
             condition: C
             for: 10m
             noDataState: Alerting
@@ -212,7 +317,7 @@ alerting:
             labels:
               severity: warning
             annotations:
-              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} com status não-Bound ou alerta preventivo'
+              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} com status não-Bound (Pending ou Lost)'
             data:
               - refId: A
                 datasourceUid: victoriametrics
@@ -221,11 +326,36 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: 'kube_persistentvolumeclaim_status_phase{phase!="Bound"} > 0'
+                  expr: 'max by (namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_status_phase{phase=~"Pending|Lost"})'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  reducer: last
+                  type: reduce
               - refId: C
                 datasourceUid: __expr__
                 relativeTimeRange:
@@ -241,7 +371,7 @@ alerting:
                         type: and
                       query:
                         params:
-                          - A
+                          - B
                       reducer:
                         params: []
                         type: last
@@ -249,19 +379,19 @@ alerting:
                   datasource:
                     type: __expr__
                     uid: __expr__
-                  expression: A
+                  expression: B
                   type: threshold
 
-          - uid: pvc-usage-critical
-            title: PVCUsageCritical
+          - uid: pvc-lost
+            title: PVCLost
             condition: C
-            for: 5m
+            for: 1m
             noDataState: Alerting
             execErrState: Alerting
             labels:
               severity: critical
             annotations:
-              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} em estado crítico'
+              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} em estado Lost'
             data:
               - refId: A
                 datasourceUid: victoriametrics
@@ -270,11 +400,36 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: 'kube_persistentvolumeclaim_status_phase{phase="Lost"} > 0'
+                  expr: 'max by (namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_status_phase{phase="Lost"})'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  reducer: last
+                  type: reduce
               - refId: C
                 datasourceUid: __expr__
                 relativeTimeRange:
@@ -290,7 +445,7 @@ alerting:
                         type: and
                       query:
                         params:
-                          - A
+                          - B
                       reducer:
                         params: []
                         type: last
@@ -298,5 +453,5 @@ alerting:
                   datasource:
                     type: __expr__
                     uid: __expr__
-                  expression: A
+                  expression: B
                   type: threshold
