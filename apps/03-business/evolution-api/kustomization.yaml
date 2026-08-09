@@ -9,6 +9,7 @@ resources:
   - migration-job.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
 
 generators:
   - secret-generator.yaml
