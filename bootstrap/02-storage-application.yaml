@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storage
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/SEU-USUARIO/vps-k8s-infra.git
+    targetRevision: main
+    path: apps/02-storage
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: storage
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+
+  revisionHistoryLimit: 10
