@@ -16,7 +16,7 @@ alerting:
             title: SRETargetDown
             condition: C
             for: 2m
-            noDataState: Alerting
+            noDataState: OK
             execErrState: Alerting
             labels:
               severity: critical
@@ -90,7 +90,7 @@ alerting:
             title: EvolutionAPINotReady
             condition: C
             for: 2m
-            noDataState: Alerting
+            noDataState: OK
             execErrState: Alerting
             labels:
               severity: critical
@@ -312,7 +312,7 @@ alerting:
             title: PVCNotBound
             condition: C
             for: 10m
-            noDataState: Alerting
+            noDataState: OK
             execErrState: Alerting
             labels:
               severity: warning
@@ -386,7 +386,7 @@ alerting:
             title: PVCLost
             condition: C
             for: 1m
-            noDataState: Alerting
+            noDataState: OK
             execErrState: Alerting
             labels:
               severity: critical
