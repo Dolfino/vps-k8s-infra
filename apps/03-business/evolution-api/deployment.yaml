@@ -13,6 +13,8 @@ spec:
       app.kubernetes.io/name: evolution-api
   template:
     metadata:
+      annotations:
+        platform.dolfino.io/config-revision: "e4-minio-v1"
       labels:
         app.kubernetes.io/name: evolution-api
     spec:

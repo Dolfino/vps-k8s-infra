@@ -38,5 +38,13 @@ data:
   CACHE_REDIS_SAVE_INSTANCES: "false"
   CACHE_LOCAL_ENABLED: "false"
 
-  S3_ENABLED: "false"
+  S3_ENABLED: "true"
+  S3_BUCKET: evolution-media
+  S3_PORT: "9000"
+  S3_ENDPOINT: minio.storage.svc.cluster.local
+  S3_REGION: us-east-1
+  S3_USE_SSL: "false"
+  S3_SKIP_POLICY: "true"
+  S3_SAVE_VIDEO: "false"
+
   RABBITMQ_ENABLED: "false"
