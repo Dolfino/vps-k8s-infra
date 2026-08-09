@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ksops-cmp-plugin
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: ksops
+    app.kubernetes.io/component: config-management-plugin
+    app.kubernetes.io/part-of: argocd
+data:
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: ksops
+    spec:
+      version: v1.0
+
+      generate:
+        command:
+          - /usr/local/bin/kustomize
+        args:
+          - build
+          - --enable-alpha-plugins
+          - --enable-exec
+          - .
+
+      preserveFileMode: false
+      provideGitCreds: false

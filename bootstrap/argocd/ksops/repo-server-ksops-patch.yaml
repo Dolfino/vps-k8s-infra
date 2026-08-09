@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  template:
+    spec:
+      containers:
+        - name: ksops
+          image: viaductoss/ksops:v4.5.1
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /var/run/argocd/argocd-cmp-server
+
+          env:
+            - name: SOPS_AGE_KEY_FILE
+              value: /sops-age/keys.txt
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+
+          volumeMounts:
+            - name: var-files
+              mountPath: /var/run/argocd
+
+            - name: plugins
+              mountPath: /home/argocd/cmp-server/plugins
+
+            - name: ksops-cmp-plugin
+              mountPath: /home/argocd/cmp-server/config/plugin.yaml
+              subPath: plugin.yaml
+              readOnly: true
+
+            # Não deve compartilhar o /tmp do repo-server.
+            - name: ksops-cmp-tmp
+              mountPath: /tmp
+
+            - name: sops-age
+              mountPath: /sops-age
+              readOnly: true
+
+      volumes:
+        - name: ksops-cmp-plugin
+          configMap:
+            name: ksops-cmp-plugin
+            items:
+              - key: plugin.yaml
+                path: plugin.yaml
+
+        - name: ksops-cmp-tmp
+          emptyDir: {}
+
+        - name: sops-age
+          secret:
+            secretName: sops-age
+            defaultMode: 0444
+            items:
+              - key: keys.txt
+                path: keys.txt

@@ -7,3 +7,6 @@ resources:
   - postgres.yaml
   - redis.yaml
   - minio.yaml
+
+generators:
+  - secret-generator.yaml
