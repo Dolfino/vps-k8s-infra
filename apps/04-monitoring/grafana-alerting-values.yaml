@@ -1,0 +1,302 @@
+alerting:
+  sre-rules.yaml:
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: SREAlertRules
+        folder: SRE Alerts
+        interval: 1m
+        rules:
+          - uid: sre-target-down
+            title: SRETargetDown
+            condition: C
+            for: 2m
+            noDataState: Alerting
+            execErrState: Alerting
+            labels:
+              severity: critical
+            annotations:
+              summary: 'Target {{ `{{ $labels.job }}` }} ({{ `{{ $labels.instance }}` }}) está indisponível'
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: "up == 0"
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+
+          - uid: evolution-api-not-ready
+            title: EvolutionAPINotReady
+            condition: C
+            for: 2m
+            noDataState: Alerting
+            execErrState: Alerting
+            labels:
+              severity: critical
+            annotations:
+              summary: "Evolution API não possui réplicas prontas"
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: 'kube_deployment_status_replicas_available{namespace="business",deployment="evolution-api"} < 1'
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+
+          - uid: pod-restart-loop
+            title: PodRestartLoop
+            condition: C
+            for: 1m
+            noDataState: OK
+            execErrState: Alerting
+            labels:
+              severity: warning
+            annotations:
+              summary: 'Pod {{ `{{ $labels.pod }}` }} no namespace {{ `{{ $labels.namespace }}` }} reiniciando frequentemente'
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: 'increase(kube_pod_container_status_restarts_total[15m]) >= 3'
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+
+          - uid: ingress-5xx-rate-high
+            title: Ingress5xxRateHigh
+            condition: C
+            for: 5m
+            noDataState: OK
+            execErrState: Alerting
+            labels:
+              severity: critical
+            annotations:
+              summary: "Taxa de erro 5xx do Ingress Traefik acima de 5%"
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: '(sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m]))) > 0.05 and (sum(rate(traefik_entrypoint_requests_total[5m])) > 0.1)'
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+
+          - uid: pvc-usage-high
+            title: PVCUsageHigh
+            condition: C
+            for: 10m
+            noDataState: Alerting
+            execErrState: Alerting
+            labels:
+              severity: warning
+            annotations:
+              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} com status não-Bound ou alerta preventivo'
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: 'kube_persistentvolumeclaim_status_phase{phase!="Bound"} > 0'
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+
+          - uid: pvc-usage-critical
+            title: PVCUsageCritical
+            condition: C
+            for: 5m
+            noDataState: Alerting
+            execErrState: Alerting
+            labels:
+              severity: critical
+            annotations:
+              summary: 'PVC {{ `{{ $labels.persistentvolumeclaim }}` }} no namespace {{ `{{ $labels.namespace }}` }} em estado crítico'
+            data:
+              - refId: A
+                datasourceUid: victoriametrics
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  editorMode: code
+                  expr: 'kube_persistentvolumeclaim_status_phase{phase="Lost"} > 0'
+                  instant: true
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold

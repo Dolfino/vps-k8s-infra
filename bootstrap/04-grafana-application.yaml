@@ -14,6 +14,7 @@ spec:
         releaseName: grafana
         valueFiles:
           - $values/apps/04-monitoring/grafana-values.yaml
+          - $values/apps/04-monitoring/grafana-alerting-values.yaml
 
     - repoURL: https://github.com/Dolfino/vps-k8s-infra.git
       targetRevision: main
