@@ -253,13 +253,15 @@ mc_config_dir="$(
 minio_ready="false"
 
 for attempt in $(seq 1 30); do
-  if MC_CONFIG_DIR="$mc_config_dir" \
+  MC_CONFIG_DIR="$mc_config_dir" \
     mc alias set \
       labminio \
       "http://127.0.0.1:${minio_forward_port}" \
       "$minio_root_user" \
       "$minio_root_password" \
-      --api S3v4 >/dev/null 2>&1; then
+      --api S3v4 >/dev/null 2>&1 || true
+
+  if MC_CONFIG_DIR="$mc_config_dir" mc ready labminio >/dev/null 2>&1; then
     minio_ready="true"
     break
   fi
