@@ -2,6 +2,10 @@ fullnameOverride: kube-state-metrics
 
 prometheusScrape: true
 
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+
 collectors:
   - daemonsets
   - deployments
