@@ -1,4 +1,46 @@
 alerting:
+  contactpoints.yaml:
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: telegram-sre
+        receivers:
+          - uid: telegram-sre-primary
+            type: telegram
+            disableResolveMessage: false
+            settings:
+              bottoken: $TELEGRAM_BOT_TOKEN
+              chatid: $TELEGRAM_CHAT_ID
+
+  policies.yaml:
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: telegram-sre
+        group_by:
+          - grafana_folder
+          - alertname
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 6h
+        routes:
+          - receiver: telegram-sre
+            object_matchers:
+              - - severity
+                - "="
+                - critical
+            group_wait: 10s
+            group_interval: 2m
+            repeat_interval: 1h
+          - receiver: telegram-sre
+            object_matchers:
+              - - severity
+                - "="
+                - warning
+            group_wait: 1m
+            group_interval: 10m
+            repeat_interval: 6h
+
   rules.yaml:
     apiVersion: 1
     deleteRules:
@@ -106,7 +148,7 @@ alerting:
                   to: 0
                 model:
                   editorMode: code
-                  expr: 'kube_deployment_status_replicas_available{namespace="business",deployment="evolution-api"}'
+                  expr: 'sum(kube_deployment_status_replicas_available{namespace="business",deployment="evolution-api"}) or vector(0)'
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
