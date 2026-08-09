@@ -7,7 +7,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/SEU-USUARIO/vps-k8s-infra.git
+    repoURL: https://github.com/Dolfino/vps-k8s-infra.git
     targetRevision: main
     path: apps/02-storage
     plugin:
