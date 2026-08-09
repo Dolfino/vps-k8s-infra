@@ -82,17 +82,11 @@ dashboardProviders:
           path: /var/lib/grafana/dashboards/default
           updateIntervalSeconds: 30
 
-dashboards:
-  default:
-    sre-cluster-overview:
-      configMapName: grafana-dashboards
-      fileName: sre-cluster-overview.json
-    evolution-api-overview:
-      configMapName: grafana-dashboards
-      fileName: evolution-api-overview.json
-    logs-and-events:
-      configMapName: grafana-dashboards
-      fileName: logs-and-events.json
+extraConfigmapMounts:
+  - name: grafana-dashboards
+    mountPath: /var/lib/grafana/dashboards/default
+    configMap: grafana-dashboards
+    readOnly: true
 
 testFramework:
   enabled: false
