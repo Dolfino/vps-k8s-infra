@@ -151,6 +151,7 @@ server:
               - kube-state-metrics.monitoring.svc.cluster.local:8080
 
       - job_name: traefik
+        honor_labels: true
         static_configs:
           - targets:
               - traefik-metrics.kube-system.svc.cluster.local:9100
