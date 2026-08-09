@@ -9,6 +9,8 @@ resources:
   - pgbouncer.yaml
   - redis.yaml
   - minio.yaml
+  - minio-evolution-policy.yaml
+  - minio-evolution-bootstrap.yaml
 
 generators:
   - secret-generator.yaml

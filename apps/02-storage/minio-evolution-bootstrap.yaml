@@ -1,0 +1,204 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-evolution-bootstrap
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio-evolution-bootstrap
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: bootstrap
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/sh
+            - -ec
+
+          args:
+            - |
+              endpoint="http://minio.storage.svc.cluster.local:9000"
+
+              attempt=1
+              while [ "$attempt" -le 60 ]; do
+                if mc alias set platform \
+                  "$endpoint" \
+                  "$MINIO_ROOT_USER" \
+                  "$MINIO_ROOT_PASSWORD" \
+                  --api S3v4 >/dev/null 2>&1; then
+                  break
+                fi
+
+                if [ "$attempt" -eq 60 ]; then
+                  printf 'MinIO indisponível após 120 segundos.\n'
+                  exit 1
+                fi
+
+                attempt=$((attempt + 1))
+                sleep 2
+              done
+
+              mc ready platform
+
+              mc mb \
+                --ignore-existing \
+                --region us-east-1 \
+                platform/evolution-media
+
+              mc anonymous set none platform/evolution-media
+
+              mc admin policy create \
+                platform \
+                evolution-media-rw \
+                /config/policy.json
+
+              if mc admin user info \
+                platform \
+                "$MINIO_ACCESS_KEY" >/dev/null 2>&1; then
+
+                mc admin user enable \
+                  platform \
+                  "$MINIO_ACCESS_KEY"
+
+                mc admin policy attach \
+                  platform \
+                  evolution-media-rw \
+                  --user "$MINIO_ACCESS_KEY"
+
+                export MC_HOST_evolution="${endpoint/http:\/\//http:\/\/${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@}"
+
+                if ! mc ls evolution/evolution-media >/dev/null 2>&1; then
+                  printf 'Rotacionando credencial do usuário dedicado.\n'
+
+                  mc admin user rm \
+                    platform \
+                    "$MINIO_ACCESS_KEY"
+
+                  mc admin user add \
+                    platform \
+                    "$MINIO_ACCESS_KEY" \
+                    "$MINIO_SECRET_KEY"
+                fi
+              else
+                mc admin user add \
+                  platform \
+                  "$MINIO_ACCESS_KEY" \
+                  "$MINIO_SECRET_KEY"
+              fi
+
+              mc admin user enable \
+                platform \
+                "$MINIO_ACCESS_KEY"
+
+              mc admin policy attach \
+                platform \
+                evolution-media-rw \
+                --user "$MINIO_ACCESS_KEY"
+
+              export MC_HOST_evolution="${endpoint/http:\/\//http:\/\/${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@}"
+
+              mc ls evolution/evolution-media >/dev/null
+
+              proof="evolution-minio-bootstrap-ok"
+
+              printf '%s' "$proof" |
+                mc pipe \
+                  evolution/evolution-media/.bootstrap/healthcheck.txt
+
+              recovered="$(
+                mc cat \
+                  evolution/evolution-media/.bootstrap/healthcheck.txt
+              )"
+
+              test "$recovered" = "$proof"
+
+              mc rm \
+                evolution/evolution-media/.bootstrap/healthcheck.txt
+
+              if mc ls evolution/lab-persistence >/dev/null 2>&1; then
+                printf 'ERRO: usuário acessou bucket não autorizado.\n'
+                exit 1
+              fi
+
+              if mc admin info evolution >/dev/null 2>&1; then
+                printf 'ERRO: usuário possui acesso administrativo.\n'
+                exit 1
+              fi
+
+              printf 'Bucket privado, credencial e política validados.\n'
+
+          env:
+            - name: MC_CONFIG_DIR
+              value: /tmp/mc
+
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: MINIO_ROOT_USER
+
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: MINIO_ROOT_PASSWORD
+
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-minio-auth
+                  key: MINIO_ACCESS_KEY
+
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-minio-auth
+                  key: MINIO_SECRET_KEY
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+
+          volumeMounts:
+            - name: policy
+              mountPath: /config
+              readOnly: true
+            - name: mc-config
+              mountPath: /tmp/mc
+
+      volumes:
+        - name: policy
+          configMap:
+            name: minio-evolution-policy
+        - name: mc-config
+          emptyDir: {}
