@@ -58,6 +58,15 @@ datasources:
         jsonData:
           httpMethod: POST
           timeInterval: 15s
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki.monitoring.svc.cluster.local:3100
+        isDefault: false
+        editable: false
+        jsonData:
+          maxLines: 1000
 
 testFramework:
   enabled: false
