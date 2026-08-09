@@ -240,7 +240,7 @@ minio_root_password="$(
 )"
 
 kubectl -n storage port-forward \
-  service/minio \
+  pod/minio-0 \
   "${minio_forward_port}:9000" \
   > "$backup_work_dir/cluster/minio-port-forward.log" 2>&1 &
 
