@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-loop-probe
+  labels:
+    app: restart-loop-probe
+spec:
+  restartPolicy: Always
+  containers:
+    - name: probe
+      image: busybox:1.36.1
+      command:
+        - sh
+        - -c
+        - echo "SRE restart-loop probe"; exit 1
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: 65534
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
