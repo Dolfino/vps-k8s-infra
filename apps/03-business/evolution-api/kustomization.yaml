@@ -13,6 +13,7 @@ resources:
 generators:
   - secret-generator.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: evolution-platform
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: evolution-platform
+      app.kubernetes.io/managed-by: argocd
