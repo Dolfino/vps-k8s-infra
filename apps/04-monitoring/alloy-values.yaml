@@ -91,6 +91,7 @@ alloy:
         stage.static_labels {
           values = {
             cluster = "lab-sre",
+            source  = "kubernetes-pods",
           }
         }
 
@@ -107,6 +108,7 @@ alloy:
         stage.static_labels {
           values = {
             cluster = "lab-sre",
+            source  = "kubernetes-events",
           }
         }
 
