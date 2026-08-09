@@ -5,3 +5,10 @@ metadata:
   name: storage
   labels:
     app.kubernetes.io/part-of: vps-k8s-infra
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: business
+  labels:
+    app.kubernetes.io/part-of: vps-k8s-infra

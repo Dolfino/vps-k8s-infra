@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: evolution-api
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+    targetRevision: main
+    path: apps/03-business/evolution-api
+    plugin:
+      name: ksops-v1.0
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: business
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=false

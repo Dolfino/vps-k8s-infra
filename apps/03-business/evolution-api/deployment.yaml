@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evolution-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: evolution-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: evolution-api
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: evolution-api
+          image: evoapicloud/evolution-api:v2.3.7@sha256:1bd8afc4a6cf48822e6cf02469aeae7bd35a12a6b616eacd1291926307f4d339
+          imagePullPolicy: IfNotPresent
+
+          # Sobrescreve o ENTRYPOINT que faria migrations novamente.
+          command:
+            - npm
+            - run
+            - start:prod
+
+          envFrom:
+            - configMapRef:
+                name: evolution-api-config
+            - secretRef:
+                name: evolution-runtime-auth
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1500m
+              memory: 1536Mi
+
+          volumeMounts:
+            - name: instances
+              mountPath: /evolution/instances
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: instances
+          persistentVolumeClaim:
+            claimName: evolution-api-data
+        - name: tmp
+          emptyDir: {}
