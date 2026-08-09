@@ -25,4 +25,10 @@ server:
 
   extraArgs:
     loggerFormat: json
-    promscrape.dropOriginalLabels: "true"
+
+  extraScrapeConfigs:
+    - job_name: kube-state-metrics
+      honor_labels: true
+      static_configs:
+        - targets:
+            - kube-state-metrics.monitoring.svc.cluster.local:8080

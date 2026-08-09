@@ -1,9 +1,11 @@
 fullnameOverride: kube-state-metrics
 
-prometheusScrape: true
+prometheusScrape: false
 
-annotations:
-  prometheus.io/scrape: "true"
+service:
+  annotations: {}
+
+podAnnotations: {}
 
 collectors:
   - daemonsets
