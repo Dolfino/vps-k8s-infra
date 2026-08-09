@@ -1,0 +1,169 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Running Pods",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "count(kube_pod_status_phase{phase=\"Running\"})",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 0 },
+      "id": 2,
+      "title": "Pending / Failed Pods",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "count(kube_pod_status_phase{phase=~\"Pending|Failed\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 0 },
+      "id": 3,
+      "title": "Total Pod Restarts",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(kube_pod_container_status_restarts_total)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 0 },
+      "id": 4,
+      "title": "Traefik Requests Total",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(traefik_entrypoint_requests_total) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 0 },
+      "id": 5,
+      "title": "Traefik 5xx Errors",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(traefik_entrypoint_requests_total{code=~\"5..\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 6,
+      "title": "Container CPU Usage by Namespace",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (namespace)",
+          "legendFormat": "{{namespace}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 7,
+      "title": "Container Memory Usage by Namespace",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{container!=\"\"}) by (namespace)",
+          "legendFormat": "{{namespace}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "id": 8,
+      "title": "Traefik Ingress Request Rate by Entrypoint",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        {
+          "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (entrypoint)",
+          "legendFormat": "{{entrypoint}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["sre", "kubernetes", "overview"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SRE Cluster Overview",
+  "uid": "sre-cluster-overview"
+}

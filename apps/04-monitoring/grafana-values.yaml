@@ -68,5 +68,31 @@ datasources:
         jsonData:
           maxLines: 1000
 
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: false
+        options:
+          path: /var/lib/grafana/dashboards/default
+          updateIntervalSeconds: 30
+
+dashboards:
+  default:
+    sre-cluster-overview:
+      configMapName: grafana-dashboards
+      fileName: sre-cluster-overview.json
+    evolution-api-overview:
+      configMapName: grafana-dashboards
+      fileName: evolution-api-overview.json
+    logs-and-events:
+      configMapName: grafana-dashboards
+      fileName: logs-and-events.json
+
 testFramework:
   enabled: false
