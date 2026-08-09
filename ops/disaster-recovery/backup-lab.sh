@@ -162,7 +162,7 @@ kubectl -n storage exec postgres-0 -- \
     -U "$pg_user" \
     --globals-only \
     --no-role-passwords \
-  > "$backup_work_dir/postgres/globals.sql"
+    -f /tmp/globals.sql
 
 kubectl -n storage exec postgres-0 -- \
   env PGPASSWORD="$pg_password" \
@@ -170,7 +170,7 @@ kubectl -n storage exec postgres-0 -- \
     -U "$pg_user" \
     -d platform \
     -Fc \
-  > "$backup_work_dir/postgres/platform.dump"
+    -f /tmp/platform.dump
 
 kubectl -n storage exec postgres-0 -- \
   env PGPASSWORD="$pg_password" \
@@ -178,21 +178,27 @@ kubectl -n storage exec postgres-0 -- \
     -U "$pg_user" \
     -d evolution_db \
     -Fc \
-  > "$backup_work_dir/postgres/evolution_db.dump"
+    -f /tmp/evolution_db.dump
+
+kubectl -n storage exec postgres-0 -- \
+  pg_restore --list /tmp/platform.dump \
+  > "$backup_work_dir/postgres/platform.toc"
+
+kubectl -n storage exec postgres-0 -- \
+  pg_restore --list /tmp/evolution_db.dump \
+  > "$backup_work_dir/postgres/evolution_db.toc"
+
+kubectl -n storage cp postgres-0:/tmp/globals.sql "$backup_work_dir/postgres/globals.sql"
+kubectl -n storage cp postgres-0:/tmp/platform.dump "$backup_work_dir/postgres/platform.dump"
+kubectl -n storage cp postgres-0:/tmp/evolution_db.dump "$backup_work_dir/postgres/evolution_db.dump"
+
+kubectl -n storage exec postgres-0 -- rm -f /tmp/globals.sql /tmp/platform.dump /tmp/evolution_db.dump
 
 test -s "$backup_work_dir/postgres/globals.sql"
 test -s "$backup_work_dir/postgres/platform.dump"
 test -s "$backup_work_dir/postgres/evolution_db.dump"
-
-kubectl -n storage exec -i postgres-0 -- \
-  pg_restore --list \
-  < "$backup_work_dir/postgres/platform.dump" \
-  > "$backup_work_dir/postgres/platform.toc"
-
-kubectl -n storage exec -i postgres-0 -- \
-  pg_restore --list \
-  < "$backup_work_dir/postgres/evolution_db.dump" \
-  > "$backup_work_dir/postgres/evolution_db.toc"
+test -s "$backup_work_dir/postgres/platform.toc"
+test -s "$backup_work_dir/postgres/evolution_db.toc"
 
 printf 'Exportando Redis em RDB...\n'
 
