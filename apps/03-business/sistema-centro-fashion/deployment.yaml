@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/dolfino/sistema-centro-fashion-api:v1.0.0
+          image: docker.io/library/sistema-centro-fashion-api:v1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -30,11 +30,7 @@ spec:
             - name: PORT
               value: "3000"
             - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-auth
-                  key: POSTGRES_URL
-                  optional: true
+              value: "postgresql://platform_admin:ce6ea32e6bd65ca030085a9008932141@postgres.storage.svc.cluster.local:5432/platform"
           resources:
             requests:
               cpu: 50m
