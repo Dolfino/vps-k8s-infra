@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sistema-centro-fashion-api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+    targetRevision: main
+    path: apps/03-business/sistema-centro-fashion
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: business
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false

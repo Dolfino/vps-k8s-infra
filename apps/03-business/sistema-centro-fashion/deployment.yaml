@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sistema-centro-fashion-api
+  namespace: business
+  labels:
+    app.kubernetes.io/name: sistema-centro-fashion-api
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sistema-centro-fashion-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sistema-centro-fashion-api
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/dolfino/sistema-centro-fashion-api:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth
+                  key: POSTGRES_URL
+                  optional: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sistema-centro-fashion-api
+  namespace: business
+spec:
+  selector:
+    app.kubernetes.io/name: sistema-centro-fashion-api
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
