@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: storage
 
 resources:
+  - minio-ingress.yaml
   - postgres.yaml
   - database-bootstrap.yaml
   - pgbouncer.yaml

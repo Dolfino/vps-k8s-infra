@@ -31,7 +31,7 @@ ingress:
   enabled: true
   ingressClassName: traefik
   hosts:
-    - grafana.local
+    - grafana.ideiasmkt.com.br
   path: /
   pathType: Prefix
 
@@ -44,7 +44,7 @@ grafana.ini:
   auth.anonymous:
     enabled: false
   server:
-    root_url: http://grafana.local:8080/
+    root_url: https://grafana.ideiasmkt.com.br/
 
 datasources:
   datasources.yaml:
