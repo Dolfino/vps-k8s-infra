@@ -17,10 +17,12 @@ spec:
         app.kubernetes.io/name: sistema-centro-fashion-web
         app.kubernetes.io/component: frontend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: web
-          image: docker.io/library/sistema-centro-fashion-web:v1.0.0
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/dolfino/sistema-centro-fashion-web:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80
@@ -64,10 +66,12 @@ spec:
         app.kubernetes.io/name: sistema-centro-fashion-api
         app.kubernetes.io/component: backend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api
-          image: docker.io/library/sistema-centro-fashion-api:v1.0.0
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/dolfino/sistema-centro-fashion-api:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 3000
