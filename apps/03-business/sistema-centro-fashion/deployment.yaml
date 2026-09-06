@@ -1,6 +1,53 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: sistema-centro-fashion-web
+  namespace: business
+  labels:
+    app.kubernetes.io/name: sistema-centro-fashion-web
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sistema-centro-fashion-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sistema-centro-fashion-web
+        app.kubernetes.io/component: frontend
+    spec:
+      containers:
+        - name: web
+          image: docker.io/library/sistema-centro-fashion-web:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sistema-centro-fashion-web
+  namespace: business
+spec:
+  selector:
+    app.kubernetes.io/name: sistema-centro-fashion-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: sistema-centro-fashion-api
   namespace: business
   labels:

@@ -1,11 +1,21 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sistema-centro-fashion-api
+  name: sistema-centro-fashion
   namespace: business
 spec:
   ingressClassName: traefik
   rules:
+    - host: mall.ideiasmkt.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sistema-centro-fashion-web
+                port:
+                  number: 80
     - host: api-mall.ideiasmkt.com.br
       http:
         paths:
