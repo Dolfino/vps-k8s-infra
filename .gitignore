@@ -4,3 +4,6 @@ keys.txt
 *.dec.yaml
 *.plain.yaml
 apps/02-storage/secrets/*.tmp
+
+# Local knowledge graph artifacts
+graphify-out/
