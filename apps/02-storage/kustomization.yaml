@@ -12,6 +12,9 @@ resources:
   - minio.yaml
   - minio-evolution-policy.yaml
   - minio-evolution-bootstrap.yaml
+  - chatwoot-database-bootstrap.yaml
+  - chatwoot-minio-policy.yaml
+  - chatwoot-minio-bootstrap.yaml
 
 generators:
   - secret-generator.yaml

@@ -1,0 +1,82 @@
+# Chatwoot Helm chart 2.0.25, application v4.16.2.
+# Credentials are supplied by the SOPS-managed chatwoot-runtime-auth Secret.
+image:
+  repository: chatwoot/chatwoot
+  tag: v4.16.2
+  pullPolicy: IfNotPresent
+
+web:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+services:
+  type: ClusterIP
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: chatwoot.ideiasmkt.com.br
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: chatwoot
+              port:
+                number: 3000
+  tls:
+    - secretName: chatwoot-tls
+      hosts:
+        - chatwoot.ideiasmkt.com.br
+
+postgresql:
+  enabled: false
+  postgresqlHost: postgres.storage.svc.cluster.local
+  postgresqlPort: 5432
+  auth:
+    username: chatwoot_app
+    database: chatwoot_production
+    postgresPassword: overridden-by-chatwoot-runtime-auth
+
+redis:
+  enabled: false
+  host: redis.storage.svc.cluster.local
+  port: 6379
+  password: overridden-by-chatwoot-runtime-auth
+
+existingEnvSecret: chatwoot-runtime-auth
+
+env:
+  ACTIVE_STORAGE_SERVICE: s3_compatible
+  STORAGE_ENDPOINT: https://s3.ideiasmkt.com.br
+  STORAGE_BUCKET_NAME: chatwoot-media
+  STORAGE_REGION: us-east-1
+  STORAGE_FORCE_PATH_STYLE: "true"
+  FRONTEND_URL: https://chatwoot.ideiasmkt.com.br
+  FORCE_SSL: "true"
+  ENABLE_ACCOUNT_SIGNUP: "true"
+  INSTALLATION_ENV: helm
+  RAILS_ENV: production
+  RAILS_LOG_TO_STDOUT: "true"
+  MAILER_SENDER_EMAIL: Chatwoot <noreply@ideiasmkt.com.br>
+  SECRET_KEY_BASE: overridden-by-chatwoot-runtime-auth

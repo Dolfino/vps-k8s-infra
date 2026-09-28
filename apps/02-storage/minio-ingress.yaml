@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: minio
   namespace: storage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
   rules:
@@ -26,3 +28,7 @@ spec:
                 name: minio
                 port:
                   number: 9000
+  tls:
+    - hosts:
+        - s3.ideiasmkt.com.br
+      secretName: s3-tls

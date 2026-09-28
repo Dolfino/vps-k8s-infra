@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chatwoot
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://chatwoot.github.io/charts
+      chart: chatwoot
+      targetRevision: 2.0.25
+      helm:
+        releaseName: chatwoot
+        valueFiles:
+          - $values/apps/03-business/chatwoot/values.yaml
+    - repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: business
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=false

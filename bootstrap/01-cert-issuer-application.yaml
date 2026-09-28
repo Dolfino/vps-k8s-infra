@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-issuer
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Dolfino/vps-k8s-infra.git
+    targetRevision: main
+    path: apps/01-certificates
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=false

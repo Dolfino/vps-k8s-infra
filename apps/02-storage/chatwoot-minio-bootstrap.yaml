@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chatwoot-minio-bootstrap
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      containers:
+        - name: bootstrap
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              endpoint=http://minio.storage.svc.cluster.local:9000
+              attempt=1
+              until mc alias set platform "$endpoint" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" --api S3v4 >/dev/null 2>&1; do
+                test "$attempt" -lt 60
+                attempt=$((attempt + 1))
+                sleep 2
+              done
+              mc mb --ignore-existing --region us-east-1 platform/chatwoot-media
+              mc anonymous set none platform/chatwoot-media
+              mc admin policy create platform chatwoot-media-rw /config/policy.json
+              if ! mc admin user info platform "$MINIO_ACCESS_KEY" >/dev/null 2>&1; then
+                mc admin user add platform "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY"
+              fi
+              mc admin user enable platform "$MINIO_ACCESS_KEY"
+              mc admin policy attach platform chatwoot-media-rw --user "$MINIO_ACCESS_KEY"
+          env:
+            - name: MC_CONFIG_DIR
+              value: /tmp/mc
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-auth
+                  key: MINIO_ROOT_PASSWORD
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chatwoot-minio-auth
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chatwoot-minio-auth
+                  key: MINIO_SECRET_KEY
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+      volumes:
+        - name: config
+          configMap:
+            name: chatwoot-minio-policy
+        - name: tmp
+          emptyDir: {}
