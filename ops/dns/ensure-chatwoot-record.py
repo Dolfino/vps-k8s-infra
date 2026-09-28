@@ -13,7 +13,7 @@ import urllib.request
 
 ZONE = "ideiasmkt.com.br"
 HOST = "chatwoot.ideiasmkt.com.br"
-ADDRESS = "103.199.187.141"
+TARGET = "manager01.ideiasmkt.com.br"
 BASE = "https://api.cloudflare.com/client/v4"
 
 
@@ -52,24 +52,24 @@ def main():
         f"/zones/{zone_id}/dns_records?" + urllib.parse.urlencode({"name": HOST}),
         token,
     )
-    if len(records) > 1 or (records and records[0]["type"] != "A"):
+    if len(records) > 1 or (records and records[0]["type"] != "CNAME"):
         raise RuntimeError(f"{HOST} has conflicting DNS records; review them manually")
 
-    desired = {"type": "A", "name": HOST, "content": ADDRESS, "ttl": 1, "proxied": False}
-    if records and all(records[0].get(k) == desired[k] for k in ("type", "name", "content", "proxied")):
-        print(f"OK: {HOST} points to {ADDRESS} with proxy disabled")
+    desired = {"type": "CNAME", "name": HOST, "content": TARGET, "ttl": 1, "proxied": False}
+    if records and all(records[0].get(k) == desired[k] for k in ("type", "name", "proxied")) and records[0].get("content", "").rstrip(".") == TARGET:
+        print(f"OK: {HOST} points to {TARGET} with proxy disabled")
         return
 
     action = "update" if records else "create"
     if not args.apply:
-        print(f"Would {action} A {HOST} -> {ADDRESS} (DNS only). Re-run with --apply.")
+        print(f"Would {action} CNAME {HOST} -> {TARGET} (DNS only). Re-run with --apply.")
         return
 
     if records:
         api("PATCH", f"/zones/{zone_id}/dns_records/{records[0]['id']}", token, desired)
     else:
         api("POST", f"/zones/{zone_id}/dns_records", token, desired)
-    print(f"Configured A {HOST} -> {ADDRESS} (DNS only)")
+    print(f"Configured CNAME {HOST} -> {TARGET} (DNS only)")
 
 
 if __name__ == "__main__":

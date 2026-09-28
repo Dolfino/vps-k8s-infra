@@ -4,16 +4,16 @@ Preparação para `chatwoot.ideiasmkt.com.br` no nó `srv910054`. O chart oficia
 
 ## Pré-requisitos para ativar
 
-1. O script `ops/dns/ensure-chatwoot-record.py` prepara um A `chatwoot.ideiasmkt.com.br` → `103.199.187.141` na Cloudflare em modo DNS-only. Ele exige `CLOUDFLARE_API_TOKEN` com Zone Read e DNS Write; sem `--apply`, apenas mostra a alteração.
+1. O CNAME `chatwoot.ideiasmkt.com.br` → `manager01.ideiasmkt.com.br` já existe na Cloudflare em modo DNS-only e resolve para `103.199.187.141` (verificado em 2026-09-28). O script `ops/dns/ensure-chatwoot-record.py` serve para conferir ou reparar esse registro no futuro; para executá-lo, exige `CLOUDFLARE_API_TOKEN` com Zone Read e DNS Write. Sem `--apply`, apenas mostra a alteração.
 2. Instalar cert-manager v1.21.2 e o `ClusterIssuer` Let’s Encrypt preparado em `bootstrap/01-*`. Os Ingresses do Chatwoot e do MinIO solicitam automaticamente os Secrets TLS `business/chatwoot-tls` e `storage/s3-tls`. Atualmente `s3.ideiasmkt.com.br` mostra o certificado padrão, não confiável, do Traefik.
 3. Configurar SMTP para convites e notificações por e-mail. Os valores atuais deixam o SMTP desativado.
-4. Verificar que o backup da plataforma inclui o novo banco `chatwoot_production` e o bucket `chatwoot-media`. O script `ops/disaster-recovery/backup-lab.sh` atual enumera bancos e buckets específicos; ele precisa ser estendido antes do uso em produção.
+4. Implantar backup de produção para o novo banco `chatwoot_production` e o bucket `chatwoot-media`, com retenção externa e teste de restauração. Os scripts em `ops/disaster-recovery/` são exclusivos do contexto local `k3d-lab-sre`; eles não cobrem a VPS K3s.
 
 ## Sequência de implantação
 
 1. Publicar as mudanças deste repositório na branch `main` após revisão.
 2. Aplicar `bootstrap/01-cert-manager-application.yaml` e esperar controller/webhook prontos. Depois aplicar `bootstrap/01-cert-issuer-application.yaml` e esperar `ClusterIssuer/letsencrypt-prod` pronto.
-3. Executar o script DNS primeiro sem `--apply` para revisão e depois com `--apply` usando token Cloudflare. Confirmar que o A record resolve para `103.199.187.141`.
+3. Confirmar que o CNAME existente continua resolvendo para `103.199.187.141` e está em modo DNS-only. Só usar o script e o token Cloudflare se for necessário corrigir o registro.
 4. Sincronizar a Application `storage` já existente. Ela cria os Secrets SOPS, o banco PostgreSQL, as extensões e o bucket MinIO com usuário dedicado, além de solicitar o certificado `s3-tls`. Verificar os Jobs `chatwoot-database-bootstrap` e `chatwoot-minio-bootstrap` e confirmar `https://s3.ideiasmkt.com.br` com certificado válido.
 5. Aplicar `bootstrap/03-chatwoot-runtime-application.yaml` no Argo CD e aguardar o Secret `business/chatwoot-runtime-auth`.
 6. Aplicar `bootstrap/03-chatwoot-application.yaml`. A Application lê `values.yaml` pelo recurso multi-source do Argo CD e executa o Job de migração do chart. Confirmar o certificado `chatwoot-tls`.
