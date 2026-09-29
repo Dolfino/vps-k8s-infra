@@ -18,7 +18,7 @@ O usuário decidiu operar sem backup do banco `chatwoot_production` e do bucket 
 4. Sincronizar a Application `storage` já existente. Ela cria os Secrets SOPS, o banco PostgreSQL, as extensões e o bucket MinIO com usuário dedicado, além de solicitar o certificado `s3-tls`. Verificar os Jobs `chatwoot-database-bootstrap` e `chatwoot-minio-bootstrap` e confirmar `https://s3.ideiasmkt.com.br` com certificado válido.
 5. Aplicar `bootstrap/03-chatwoot-runtime-application.yaml` no Argo CD e aguardar o Secret `business/chatwoot-runtime-auth`.
 6. Aplicar `bootstrap/03-chatwoot-routing-application.yaml` e depois `bootstrap/03-chatwoot-application.yaml`. A primeira Application configura o redirecionamento HTTP→HTTPS no Traefik. A segunda lê `values.yaml` pelo recurso multi-source do Argo CD e executa o Job de migração como PreSync, antes de iniciar web/worker. `FORCE_SSL=false` permite que as sondagens internas usem HTTP; o ingresso público redireciona para HTTPS. Confirmar o certificado `chatwoot-tls`.
-7. Confirmar pods web/worker, Job `chatwoot-migrate` e `https://chatwoot.ideiasmkt.com.br/health`. Criar a primeira conta e depois trocar `env.ENABLE_ACCOUNT_SIGNUP` para `false`.
+7. Confirmar pods web/worker, Job `chatwoot-migrate` e `https://chatwoot.ideiasmkt.com.br/health`. O cadastro público está desativado (`env.ENABLE_ACCOUNT_SIGNUP=false`); o primeiro superadministrador é criado pela página `/installation/onboarding`, cujo fluxo é independente dessa variável. Concluir o onboarding imediatamente para fechar a página inicial pública.
 
 ## Validação local
 

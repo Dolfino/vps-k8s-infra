@@ -81,7 +81,7 @@ env:
   STORAGE_FORCE_PATH_STYLE: "true"
   FRONTEND_URL: https://chatwoot.ideiasmkt.com.br
   FORCE_SSL: "false"
-  ENABLE_ACCOUNT_SIGNUP: "true"
+  ENABLE_ACCOUNT_SIGNUP: "false"
   INSTALLATION_ENV: helm
   RAILS_ENV: production
   RAILS_LOG_TO_STDOUT: "true"
