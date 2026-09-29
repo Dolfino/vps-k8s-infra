@@ -12,6 +12,12 @@ Implantado em 2026-09-29. Argo CD mostra `cert-manager`, `cert-issuer`, `storage
 2. cert-manager v1.21.2 e o `ClusterIssuer` Let’s Encrypt estão declarados em `bootstrap/01-*`. Os Ingresses do Chatwoot e do MinIO renovam automaticamente os certificados `business/chatwoot-tls` e `storage/s3-tls`.
 3. SMTP Gmail está preparado em `values.yaml` (porta 587 com STARTTLS). `SMTP_USERNAME`, `SMTP_PASSWORD` (senha de app) e `MAILER_SENDER_EMAIL` estão no Secret SOPS `chatwoot-runtime-auth`; não usar a senha normal da conta Google. Após implantar, enviar e receber um e-mail de teste.
 
+### Facebook Messenger e Instagram
+
+`FB_APP_ID`, `FB_APP_SECRET` e `FB_VERIFY_TOKEN` ficam no Secret SOPS `chatwoot-runtime-auth`. O callback Messenger na Meta é `https://chatwoot.ideiasmkt.com.br/bot`; o token informado lá precisa ser exatamente o `FB_VERIFY_TOKEN` configurado aqui. Depois de sincronizar o Secret, reinicie web e worker para carregar as variáveis e crie a caixa de entrada Facebook no painel. A autorização da página ocorre pelo login da Meta no Chatwoot; não armazene um token de acesso pessoal no Secret.
+
+O Instagram Business Login ainda exige `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` e `INSTAGRAM_VERIFY_TOKEN`, obtidos na configuração do produto Instagram na Meta. Seus URLs são `https://chatwoot.ideiasmkt.com.br/webhooks/instagram` para o webhook e `https://chatwoot.ideiasmkt.com.br/instagram/callback` para o redirecionamento do login. Não reutilize as credenciais do Facebook como se fossem as do produto Instagram. O `IG_VERIFY_TOKEN` pertence ao fluxo antigo via Facebook Login.
+
 O usuário decidiu operar sem backup do banco `chatwoot_production` e do bucket `chatwoot-media`. Esses dados podem ser perdidos permanentemente se o armazenamento ou a VPS falhar. Os scripts em `ops/disaster-recovery/` são exclusivos do laboratório `k3d-lab-sre` e não protegem esta implantação.
 
 ## Sequência de implantação
