@@ -2,6 +2,7 @@
 """Check or create the Chatwoot DNS record in Cloudflare.
 
 Requires CLOUDFLARE_API_TOKEN with Zone Read and DNS Write for ideiasmkt.com.br.
+Optionally read it from a local .env file with --env-file.
 The default mode only reports the change. Pass --apply to create/update it.
 """
 import argparse
@@ -10,6 +11,7 @@ import os
 import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 ZONE = "ideiasmkt.com.br"
 HOST = "chatwoot.ideiasmkt.com.br"
@@ -35,13 +37,27 @@ def api(method, path, token, body=None):
     return payload["result"]
 
 
+def token_from_env_file(path):
+    matches = []
+    for line in Path(path).read_text().splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key.strip() == "CLOUDFLARE_API_TOKEN":
+            matches.append(value.strip().strip('"\''))
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected one CLOUDFLARE_API_TOKEN entry in {path}")
+    return matches[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="write the DNS record")
+    parser.add_argument("--env-file", help="read CLOUDFLARE_API_TOKEN from a local .env file")
     args = parser.parse_args()
-    token = os.environ.get("CLOUDFLARE_API_TOKEN")
+    token = os.environ.get("CLOUDFLARE_API_TOKEN") or (
+        token_from_env_file(args.env_file) if args.env_file else None
+    )
     if not token:
-        raise RuntimeError("Set CLOUDFLARE_API_TOKEN before running this script")
+        raise RuntimeError("Set CLOUDFLARE_API_TOKEN or provide --env-file with a nonempty token")
 
     zones = api("GET", "/zones?" + urllib.parse.urlencode({"name": ZONE}), token)
     if len(zones) != 1:
