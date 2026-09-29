@@ -24,6 +24,12 @@ worker:
       cpu: "2"
       memory: 2Gi
 
+# Argo CD waits for healthy deployments before running Helm post-install hooks.
+# Chatwoot needs its database schema before web and worker can start.
+hooks:
+  migrate:
+    hookAnnotation: pre-install,pre-upgrade
+
 services:
   type: ClusterIP
 service:

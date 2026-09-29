@@ -17,7 +17,7 @@ O usuário decidiu operar sem backup do banco `chatwoot_production` e do bucket 
 3. Confirmar que o CNAME existente continua resolvendo para `103.199.187.141` e está em modo DNS-only. Só usar o script e o token Cloudflare se for necessário corrigir o registro.
 4. Sincronizar a Application `storage` já existente. Ela cria os Secrets SOPS, o banco PostgreSQL, as extensões e o bucket MinIO com usuário dedicado, além de solicitar o certificado `s3-tls`. Verificar os Jobs `chatwoot-database-bootstrap` e `chatwoot-minio-bootstrap` e confirmar `https://s3.ideiasmkt.com.br` com certificado válido.
 5. Aplicar `bootstrap/03-chatwoot-runtime-application.yaml` no Argo CD e aguardar o Secret `business/chatwoot-runtime-auth`.
-6. Aplicar `bootstrap/03-chatwoot-application.yaml`. A Application lê `values.yaml` pelo recurso multi-source do Argo CD e executa o Job de migração do chart. Confirmar o certificado `chatwoot-tls`.
+6. Aplicar `bootstrap/03-chatwoot-application.yaml`. A Application lê `values.yaml` pelo recurso multi-source do Argo CD e executa o Job de migração como PreSync, antes de iniciar web/worker. Confirmar o certificado `chatwoot-tls`.
 7. Confirmar pods web/worker, Job `chatwoot-migrate` e `https://chatwoot.ideiasmkt.com.br/health`. Criar a primeira conta e depois trocar `env.ENABLE_ACCOUNT_SIGNUP` para `false`.
 
 ## Validação local
