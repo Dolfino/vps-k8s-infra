@@ -40,6 +40,7 @@ ingress:
   ingressClassName: traefik
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: business-chatwoot-https-redirect@kubernetescrd
   hosts:
     - host: chatwoot.ideiasmkt.com.br
       paths:
@@ -79,7 +80,7 @@ env:
   STORAGE_REGION: us-east-1
   STORAGE_FORCE_PATH_STYLE: "true"
   FRONTEND_URL: https://chatwoot.ideiasmkt.com.br
-  FORCE_SSL: "true"
+  FORCE_SSL: "false"
   ENABLE_ACCOUNT_SIGNUP: "true"
   INSTALLATION_ENV: helm
   RAILS_ENV: production
