@@ -81,7 +81,10 @@ spec:
             - name: PORT
               value: "3000"
             - name: DATABASE_URL
-              value: "postgresql://platform_admin:46b4b5107a7cb8d6f128632445412bc44220468f4213a3b3@postgres.storage.svc.cluster.local:5432/platform"
+              valueFrom:
+                secretKeyRef:
+                  name: sistema-centro-fashion-db-auth
+                  key: DATABASE_URL
           resources:
             requests:
               cpu: 50m
