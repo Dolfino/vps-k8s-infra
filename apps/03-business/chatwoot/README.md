@@ -6,7 +6,7 @@ Preparação para `chatwoot.ideiasmkt.com.br` no nó `srv910054`. O chart oficia
 
 1. O CNAME `chatwoot.ideiasmkt.com.br` → `manager01.ideiasmkt.com.br` já existe na Cloudflare em modo DNS-only e resolve para `103.199.187.141` (verificado em 2026-09-28). O script `ops/dns/ensure-chatwoot-record.py` serve para conferir ou reparar esse registro no futuro; para executá-lo, exige `CLOUDFLARE_API_TOKEN` com Zone Read e DNS Write. Sem `--apply`, apenas mostra a alteração.
 2. Instalar cert-manager v1.21.2 e o `ClusterIssuer` Let’s Encrypt preparado em `bootstrap/01-*`. Os Ingresses do Chatwoot e do MinIO solicitam automaticamente os Secrets TLS `business/chatwoot-tls` e `storage/s3-tls`. Atualmente `s3.ideiasmkt.com.br` mostra o certificado padrão, não confiável, do Traefik.
-3. SMTP Gmail está preparado em `values.yaml` (porta 587 com STARTTLS). Antes de implantar, informar qual conta Gmail enviará as mensagens, criar uma senha de app nessa conta e adicionar `SMTP_USERNAME`/`SMTP_PASSWORD` ao Secret SOPS `chatwoot-runtime-auth`. Ajustar `MAILER_SENDER_EMAIL` para o mesmo endereço ou um alias autorizado pela conta Gmail. Não usar a senha normal da conta Google.
+3. SMTP Gmail está preparado em `values.yaml` (porta 587 com STARTTLS). `SMTP_USERNAME`, `SMTP_PASSWORD` (senha de app) e `MAILER_SENDER_EMAIL` estão no Secret SOPS `chatwoot-runtime-auth`; não usar a senha normal da conta Google. Após implantar, enviar e receber um e-mail de teste.
 4. Implantar backup de produção para o novo banco `chatwoot_production` e o bucket `chatwoot-media`, com retenção externa e teste de restauração. Os scripts em `ops/disaster-recovery/` são exclusivos do contexto local `k3d-lab-sre`; eles não cobrem a VPS K3s.
 
 ## Sequência de implantação

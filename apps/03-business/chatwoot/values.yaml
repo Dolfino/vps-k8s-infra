@@ -78,7 +78,6 @@ env:
   INSTALLATION_ENV: helm
   RAILS_ENV: production
   RAILS_LOG_TO_STDOUT: "true"
-  MAILER_SENDER_EMAIL: Chatwoot <noreply@ideiasmkt.com.br>
   SMTP_ADDRESS: smtp.gmail.com
   SMTP_PORT: "587"
   SMTP_DOMAIN: gmail.com
