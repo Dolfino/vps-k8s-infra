@@ -1,0 +1,302 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgadmin-servers
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/component: database-admin
+data:
+  servers.json: |
+    {
+      "Servers": {
+        "1": {
+          "Name": "PostgreSQL da VPS (somente leitura)",
+          "Group": "Aplicacoes",
+          "Host": "postgres.storage.svc.cluster.local",
+          "Port": 5432,
+          "MaintenanceDB": "postgres",
+          "Username": "pgadmin_reader",
+          "SSLMode": "prefer"
+        }
+      }
+    }
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgadmin-data
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/component: database-admin
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgadmin-database-bootstrap
+  labels:
+    app.kubernetes.io/name: pgadmin-database-bootstrap
+    app.kubernetes.io/component: database-bootstrap
+    app.kubernetes.io/part-of: pgadmin
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pgadmin-database-bootstrap
+        app.kubernetes.io/component: database-bootstrap
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: database-bootstrap
+          image: pgvector/pgvector:0.8.6-pg16-trixie
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              psql \
+                -v ON_ERROR_STOP=1 \
+                -v reader_user="$PGADMIN_DB_USER" \
+                -v reader_password="$PGADMIN_DB_PASSWORD" \
+                <<'SQL'
+              SET password_encryption = 'scram-sha-256';
+
+              SELECT format(
+                'CREATE ROLE %I LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 10 PASSWORD %L',
+                :'reader_user',
+                :'reader_password'
+              )
+              WHERE NOT EXISTS (
+                SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = :'reader_user'
+              )
+              \gexec
+
+              SELECT format(
+                'ALTER ROLE %I WITH LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 10 PASSWORD %L',
+                :'reader_user',
+                :'reader_password'
+              )
+              \gexec
+
+              SELECT format(
+                'GRANT pg_read_all_data, pg_read_all_stats TO %I',
+                :'reader_user'
+              )
+              \gexec
+
+              SELECT format(
+                'GRANT CONNECT ON DATABASE %I TO %I',
+                datname,
+                :'reader_user'
+              )
+              FROM pg_catalog.pg_database
+              WHERE datallowconn
+                AND NOT datistemplate
+              \gexec
+              SQL
+
+              PGUSER="$PGADMIN_DB_USER" \
+              PGPASSWORD="$PGADMIN_DB_PASSWORD" \
+              PGDATABASE=postgres \
+              psql -v ON_ERROR_STOP=1 -c "SELECT current_database(), current_user;"
+          env:
+            - name: PGHOST
+              value: postgres.storage.svc.cluster.local
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: postgres
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth
+                  key: POSTGRES_PASSWORD
+            - name: PGADMIN_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-auth
+                  key: PGADMIN_DB_USER
+            - name: PGADMIN_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-auth
+                  key: PGADMIN_DB_PASSWORD
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/component: database-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pgadmin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pgadmin
+        app.kubernetes.io/component: database-admin
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 5050
+        runAsGroup: 5050
+        fsGroup: 5050
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pgadmin
+          image: docker.io/dpage/pgadmin4:9.18@sha256:f50f50cb2eda23412f7cddf0a7a4f2a4046f583f4f411d87d8b06c0bec8ae0a1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-auth
+                  key: PGADMIN_DEFAULT_EMAIL
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-auth
+                  key: PGADMIN_DEFAULT_PASSWORD
+            - name: PGADMIN_SERVER_JSON_FILE
+              value: /etc/pgadmin/servers.json
+            - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
+              value: "True"
+            - name: PGADMIN_CONFIG_LOGIN_BANNER
+              value: "'Acesso administrativo autorizado somente.'"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /misc/ping
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /misc/ping
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /misc/ping
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 5050
+            runAsGroup: 5050
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pgadmin
+            - name: servers
+              mountPath: /etc/pgadmin/servers.json
+              subPath: servers.json
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pgadmin-data
+        - name: servers
+          configMap:
+            name: pgadmin-servers
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/component: database-admin
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: pgadmin
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

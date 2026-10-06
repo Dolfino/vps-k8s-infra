@@ -5,6 +5,8 @@ namespace: storage
 
 resources:
   - minio-ingress.yaml
+  - pgadmin-ingress.yaml
+  - pgadmin.yaml
   - postgres.yaml
   - database-bootstrap.yaml
   - pgbouncer.yaml
