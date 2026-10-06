@@ -209,7 +209,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: pgadmin
-          image: docker.io/dpage/pgadmin4:9.18@sha256:f50f50cb2eda23412f7cddf0a7a4f2a4046f583f4f411d87d8b06c0bec8ae0a1
+          image: docker.io/dpage/pgadmin4:9.18@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaaa3defc8dd1a3f26de
           imagePullPolicy: IfNotPresent
           env:
             - name: PGADMIN_DEFAULT_EMAIL
