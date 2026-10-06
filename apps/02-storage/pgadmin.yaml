@@ -207,6 +207,39 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: prepare-pgpass
+          image: docker.io/dpage/pgadmin4:9.18@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaa3defc8dd1a3f26de
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              cp /credentials-source/pgpass /credentials/.pgpass
+              chmod 0600 /credentials/.pgpass
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 5050
+            runAsGroup: 5050
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: credentials-source
+              mountPath: /credentials-source
+              readOnly: true
+            - name: credentials
+              mountPath: /credentials
       containers:
         - name: pgadmin
           image: docker.io/dpage/pgadmin4:9.18@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaa3defc8dd1a3f26de
@@ -227,7 +260,9 @@ spec:
             - name: PGADMIN_REPLACE_SERVERS_ON_STARTUP
               value: "True"
             - name: PGPASS_FILE
-              value: /etc/pgadmin/pgpass
+              value: /credentials/.pgpass
+            - name: PGPASSFILE
+              value: /credentials/.pgpass
             - name: PGADMIN_LISTEN_PORT
               value: "8080"
             - name: PGADMIN_DISABLE_POSTFIX
@@ -283,8 +318,7 @@ spec:
               subPath: servers.json
               readOnly: true
             - name: credentials
-              mountPath: /etc/pgadmin/pgpass
-              subPath: pgpass
+              mountPath: /credentials
               readOnly: true
             - name: tmp
               mountPath: /tmp
@@ -295,13 +329,15 @@ spec:
         - name: servers
           configMap:
             name: pgadmin-servers
-        - name: credentials
+        - name: credentials-source
           secret:
             secretName: pgadmin-auth
             defaultMode: 0440
             items:
               - key: PGPASS_FILE
                 path: pgpass
+        - name: credentials
+          emptyDir: {}
         - name: tmp
           emptyDir: {}
 
