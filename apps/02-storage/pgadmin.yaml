@@ -16,7 +16,12 @@ data:
           "Port": 5432,
           "MaintenanceDB": "postgres",
           "Username": "pgadmin_reader",
-          "SSLMode": "prefer"
+          "SSLMode": "prefer",
+          "ConnectionParameters": {
+            "sslmode": "prefer",
+            "connect_timeout": 10,
+            "passfile": ".pgpass"
+          }
         }
       }
     }
@@ -216,8 +221,10 @@ spec:
             - -ec
           args:
             - |
-              cp /credentials-source/pgpass /credentials/.pgpass
-              chmod 0600 /credentials/.pgpass
+              mkdir -p /data/storage/admin_ideiasmkt.com.br
+              cp /credentials-source/pgpass /data/storage/admin_ideiasmkt.com.br/.pgpass
+              chmod 0700 /data/storage/admin_ideiasmkt.com.br
+              chmod 0600 /data/storage/admin_ideiasmkt.com.br/.pgpass
           securityContext:
             runAsNonRoot: true
             runAsUser: 5050
@@ -238,8 +245,8 @@ spec:
             - name: credentials-source
               mountPath: /credentials-source
               readOnly: true
-            - name: credentials
-              mountPath: /credentials
+            - name: data
+              mountPath: /data
       containers:
         - name: pgadmin
           image: docker.io/dpage/pgadmin4:9.18@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaa3defc8dd1a3f26de
@@ -259,10 +266,6 @@ spec:
               value: /etc/pgadmin/servers.json
             - name: PGADMIN_REPLACE_SERVERS_ON_STARTUP
               value: "True"
-            - name: PGPASS_FILE
-              value: /credentials/.pgpass
-            - name: PGPASSFILE
-              value: /credentials/.pgpass
             - name: PGADMIN_LISTEN_PORT
               value: "8080"
             - name: PGADMIN_DISABLE_POSTFIX
@@ -317,9 +320,6 @@ spec:
               mountPath: /etc/pgadmin/servers.json
               subPath: servers.json
               readOnly: true
-            - name: credentials
-              mountPath: /credentials
-              readOnly: true
             - name: tmp
               mountPath: /tmp
       volumes:
@@ -336,8 +336,6 @@ spec:
             items:
               - key: PGPASS_FILE
                 path: pgpass
-        - name: credentials
-          emptyDir: {}
         - name: tmp
           emptyDir: {}
 
