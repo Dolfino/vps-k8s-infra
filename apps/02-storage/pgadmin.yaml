@@ -224,13 +224,15 @@ spec:
                   key: PGADMIN_DEFAULT_PASSWORD
             - name: PGADMIN_SERVER_JSON_FILE
               value: /etc/pgadmin/servers.json
+            - name: PGADMIN_LISTEN_PORT
+              value: "8080"
             - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
               value: "True"
             - name: PGADMIN_CONFIG_LOGIN_BANNER
               value: "'Acesso administrativo autorizado somente.'"
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           startupProbe:
             httpGet:
