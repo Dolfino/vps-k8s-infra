@@ -29,6 +29,8 @@ metadata:
   labels:
     app.kubernetes.io/name: pgadmin
     app.kubernetes.io/component: database-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   accessModes:
     - ReadWriteOnce
