@@ -5,6 +5,7 @@ namespace: business
 
 resources:
   - configmap.yaml
+  - chatwoot-patch-configmap.yaml
   - pvc.yaml
   - migration-job.yaml
   - deployment.yaml

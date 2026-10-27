@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        platform.dolfino.io/config-revision: "e4-minio-v1"
+        platform.dolfino.io/config-revision: "e5-chatwoot-contact-fallback-v1"
       labels:
         app.kubernetes.io/name: evolution-api
     spec:
@@ -23,6 +23,26 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: patch-chatwoot-contact-fallback
+          image: evoapicloud/evolution-api:v2.3.7@sha256:1bd8afc4a6cf48822e6cf02469aeae7bd35a12a6b616eacd1291926307f4d339
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - cp -a /evolution/dist/. /patched-dist/ && node /patch/patch-chatwoot.js
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: patched-dist
+              mountPath: /patched-dist
+            - name: chatwoot-patch
+              mountPath: /patch
+              readOnly: true
       containers:
         - name: evolution-api
           image: evoapicloud/evolution-api:v2.3.7@sha256:1bd8afc4a6cf48822e6cf02469aeae7bd35a12a6b616eacd1291926307f4d339
@@ -78,12 +98,19 @@ spec:
               memory: 1536Mi
 
           volumeMounts:
+            - name: patched-dist
+              mountPath: /evolution/dist
             - name: instances
               mountPath: /evolution/instances
             - name: tmp
               mountPath: /tmp
 
       volumes:
+        - name: patched-dist
+          emptyDir: {}
+        - name: chatwoot-patch
+          configMap:
+            name: evolution-chatwoot-patch
         - name: instances
           persistentVolumeClaim:
             claimName: evolution-api-data
