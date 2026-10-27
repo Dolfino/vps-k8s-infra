@@ -1,8 +1,8 @@
-# Chatwoot Helm chart 2.0.25, application v4.16.2.
+# Chatwoot Helm chart 2.0.25, application v4.17.0.
 # Credentials are supplied by the SOPS-managed chatwoot-runtime-auth Secret.
 image:
   repository: chatwoot/chatwoot
-  tag: v4.16.2
+  tag: v4.17.0
   pullPolicy: IfNotPresent
 
 web:
