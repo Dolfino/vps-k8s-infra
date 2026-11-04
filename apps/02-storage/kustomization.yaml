@@ -9,6 +9,7 @@ resources:
   - pgadmin.yaml
   - postgres.yaml
   - database-bootstrap.yaml
+  - consent-database-bootstrap.yaml
   - pgbouncer.yaml
   - redis.yaml
   - minio.yaml

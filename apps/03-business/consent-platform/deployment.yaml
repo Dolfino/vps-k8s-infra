@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consent-platform
+  labels:
+    app.kubernetes.io/name: consent-platform
+    app.kubernetes.io/component: api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: consent-platform
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: consent-platform
+        app.kubernetes.io/component: api
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: ghcr-secret
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/dolfino/biscoitoconsent-platform:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3333
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3333"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: consent-platform-runtime
+                  key: DATABASE_URL
+            - name: CONSENT_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: consent-platform-runtime
+                  key: CONSENT_HMAC_KEY
+            - name: CONSENT_HMAC_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: consent-platform-runtime
+                  key: CONSENT_HMAC_KEY_ID
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: consent-platform-runtime
+                  key: ADMIN_TOKEN
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consent-platform
+  labels:
+    app.kubernetes.io/name: consent-platform
+spec:
+  selector:
+    app.kubernetes.io/name: consent-platform
+  ports:
+    - name: http
+      port: 3333
+      targetPort: http

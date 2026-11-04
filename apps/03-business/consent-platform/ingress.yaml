@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: consent-platform
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: consent.qez.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: consent-platform
+                port:
+                  number: 3333
+  tls:
+    - hosts:
+        - consent.qez.com.br
+      secretName: consent-qez-com-br-tls
