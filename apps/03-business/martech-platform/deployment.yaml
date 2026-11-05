@@ -21,7 +21,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:6de363285c5bdacd60c0bb8928e5dc134f7fc237
+          image: ghcr.io/dolfino/martech-platform:024e2c41418b8e5dd3a78df90691b8f5d89cbf9f
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
