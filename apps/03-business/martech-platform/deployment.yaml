@@ -21,7 +21,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:32a9706d4cfc5fbf98e4db520adba95a664520ba
+          image: ghcr.io/dolfino/martech-platform:767799c398fa212ed3224e702c597f40a906d28e
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
@@ -29,6 +29,7 @@ spec:
           env:
             - {name: NODE_ENV, value: production}
             - {name: PORT, value: "3340"}
+            - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
           startupProbe:
             httpGet: {path: /health, port: http}
             periodSeconds: 5
