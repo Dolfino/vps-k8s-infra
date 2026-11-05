@@ -94,7 +94,7 @@ spec:
               SET password_encryption = 'scram-sha-256';
 
               SELECT format(
-                'CREATE ROLE %I LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 10 PASSWORD %L',
+                'CREATE ROLE %I LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 30 PASSWORD %L',
                 :'reader_user',
                 :'reader_password'
               )
@@ -104,7 +104,7 @@ spec:
               \gexec
 
               SELECT format(
-                'ALTER ROLE %I WITH LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 10 PASSWORD %L',
+                'ALTER ROLE %I WITH LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION CONNECTION LIMIT 30 PASSWORD %L',
                 :'reader_user',
                 :'reader_password'
               )
