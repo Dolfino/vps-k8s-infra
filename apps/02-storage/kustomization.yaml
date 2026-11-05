@@ -10,6 +10,7 @@ resources:
   - postgres.yaml
   - database-bootstrap.yaml
   - consent-database-bootstrap.yaml
+  - martech-database-bootstrap.yaml
   - pgbouncer.yaml
   - redis.yaml
   - minio.yaml

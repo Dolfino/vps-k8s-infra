@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: martech-platform
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: martech.qez.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: martech-platform, port: {number: 3340}}
+  tls:
+    - hosts: [martech.qez.com.br]
+      secretName: martech-qez-com-br-tls
