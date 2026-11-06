@@ -49,6 +49,7 @@ spec:
             - {name: KC_HOSTNAME, value: "https://auth.qez.com.br"}
             - {name: KC_HTTP_ENABLED, value: "true"}
             - {name: KC_PROXY_HEADERS, value: xforwarded}
+            - {name: KC_PROXY_TRUSTED_ADDRESSES, value: "10.42.0.0/16"}
             - {name: KC_HEALTH_ENABLED, value: "true"}
             - {name: KC_METRICS_ENABLED, value: "true"}
             - {name: KC_HTTP_MANAGEMENT_SCHEME, value: http}
