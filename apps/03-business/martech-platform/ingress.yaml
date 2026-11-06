@@ -10,6 +10,22 @@ spec:
     - host: martech.qez.com.br
       http:
         paths:
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service: {name: martech-admin-sso, port: {number: 4180}}
+          - path: /v1/admin
+            pathType: Prefix
+            backend:
+              service: {name: martech-admin-sso, port: {number: 4180}}
+          - path: /campaign-admin.html
+            pathType: Exact
+            backend:
+              service: {name: martech-admin-sso, port: {number: 4180}}
+          - path: /tracking-admin.html
+            pathType: Exact
+            backend:
+              service: {name: martech-admin-sso, port: {number: 4180}}
           - path: /
             pathType: Prefix
             backend:
