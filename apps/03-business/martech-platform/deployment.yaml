@@ -32,7 +32,9 @@ spec:
             - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
-            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,analyst,operator"}
+            # Until read/write authorization is split per route, only the platform
+            # super-administrator may use the administrative API.
+            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
           startupProbe:
             httpGet: {path: /health, port: http}

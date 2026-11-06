@@ -62,7 +62,9 @@ spec:
                   key: ADMIN_TOKEN
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "consent-admin"}
-            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,privacy-manager,analyst,operator"}
+            # Consent evidence is sensitive; delegated read/write roles will be
+            # enabled only after route-level authorization is implemented.
+            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
           startupProbe:
             httpGet:
