@@ -21,7 +21,8 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:191ff0cf08d643cebf0c201860d37248c1abc082
+          # Advance only after the immutable image is visible in GHCR.
+          image: ghcr.io/dolfino/martech-platform:9d54f0d7bdf64945ff903a25c6a2a945856f06f7
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
