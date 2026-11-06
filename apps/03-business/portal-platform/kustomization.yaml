@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: business
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+generators:
+  - secret-generator.yaml
+configMapGenerator:
+  - name: portal-static
+    files:
+      - static/index.html
+      - static/styles.css
+      - static/app.js
+  - name: portal-nginx
+    files:
+      - default.conf=static/nginx.conf
+generatorOptions:
+  disableNameSuffixHash: false
+

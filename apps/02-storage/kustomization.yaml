@@ -11,6 +11,7 @@ resources:
   - database-bootstrap.yaml
   - consent-database-bootstrap.yaml
   - martech-database-bootstrap.yaml
+  - identity-database-bootstrap.yaml
   - pgbouncer.yaml
   - redis.yaml
   - minio.yaml

@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-platform
+  labels:
+    app.kubernetes.io/name: portal-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: portal-platform
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: portal-platform
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.5@sha256:8498b0d0ef0a7b29686414000a08aee467f02d0299c9ed1e006a8f33fc017916
+          imagePullPolicy: IfNotPresent
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url=https://auth.qez.com.br/realms/qez
+            - --client-id=qez-portal
+            - --redirect-url=https://app.qez.com.br/oauth2/callback
+            - --code-challenge-method=S256
+            - --scope=openid profile email roles
+            - --email-domain=*
+            - --upstream=http://127.0.0.1:8080
+            - --http-address=0.0.0.0:4180
+            - --reverse-proxy=true
+            - --skip-provider-button=true
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+            - --cookie-expire=8h
+            - --cookie-refresh=5m
+            - --session-cookie-minimal=true
+            - --pass-user-headers=true
+            - --pass-access-token=false
+            - --pass-authorization-header=false
+            - --skip-auth-strip-headers=false
+            - --set-authorization-header=false
+            - --silence-ping-logging=true
+          env:
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom: {secretKeyRef: {name: portal-runtime, key: OAUTH2_PROXY_CLIENT_SECRET}}
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom: {secretKeyRef: {name: portal-runtime, key: OAUTH2_PROXY_COOKIE_SECRET}}
+          ports:
+            - {name: http, containerPort: 4180}
+          readinessProbe:
+            httpGet: {path: /ping, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /ping, port: http}
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 250m, memory: 128Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+        - name: portal-ui
+          image: ghcr.io/nginx/nginx-unprivileged:1.30.6-alpine3.24@sha256:44e74ca483234093081138b6d7b6f561d55557756a2deefc3a5056148defeb99
+          imagePullPolicy: IfNotPresent
+          ports:
+            - {name: ui, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /healthz, port: ui}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /healthz, port: ui}
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: portal-static, mountPath: /usr/share/nginx/html, readOnly: true}
+            - {name: portal-nginx, mountPath: /etc/nginx/conf.d, readOnly: true}
+            - {name: nginx-cache, mountPath: /var/cache/nginx}
+            - {name: nginx-run, mountPath: /var/run}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: portal-static, configMap: {name: portal-static}}
+        - {name: portal-nginx, configMap: {name: portal-nginx}}
+        - {name: nginx-cache, emptyDir: {}}
+        - {name: nginx-run, emptyDir: {}}
+        - {name: tmp, emptyDir: {}}
+

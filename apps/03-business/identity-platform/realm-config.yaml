@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-realm-import
+data:
+  qez-realm.json: |
+    {
+      "realm": "qez",
+      "displayName": "Centro Fashion",
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "resetPasswordAllowed": true,
+      "rememberMe": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "verifyEmail": false,
+      "bruteForceProtected": true,
+      "permanentLockout": false,
+      "failureFactor": 5,
+      "waitIncrementSeconds": 60,
+      "maxFailureWaitSeconds": 900,
+      "maxDeltaTimeSeconds": 43200,
+      "eventsEnabled": true,
+      "eventsExpiration": 7776000,
+      "adminEventsEnabled": true,
+      "adminEventsDetailsEnabled": true,
+      "roles": {
+        "realm": [
+          {"name": "platform-superadmin", "description": "Administracao integral da plataforma"},
+          {"name": "marketing-manager", "description": "Gestao das aplicacoes de marketing"},
+          {"name": "analyst", "description": "Consulta de dados e relatorios"},
+          {"name": "operator", "description": "Operacao de campanhas e formularios"}
+        ]
+      },
+      "clients": [
+        {
+          "clientId": "qez-portal",
+          "name": "Portal QEZ",
+          "secret": "${PORTAL_CLIENT_SECRET}",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "bearerOnly": false,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "rootUrl": "https://app.qez.com.br",
+          "baseUrl": "https://app.qez.com.br/",
+          "redirectUris": ["https://app.qez.com.br/oauth2/callback"],
+          "webOrigins": ["https://app.qez.com.br"],
+          "attributes": {
+            "pkce.code.challenge.method": "S256",
+            "post.logout.redirect.uris": "https://app.qez.com.br/*"
+          },
+          "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email"]
+        }
+      ],
+      "users": [
+        {
+          "username": "david",
+          "enabled": true,
+          "emailVerified": false,
+          "requiredActions": ["UPDATE_PASSWORD", "CONFIGURE_TOTP"],
+          "realmRoles": ["platform-superadmin"],
+          "credentials": [
+            {"type": "password", "value": "${INITIAL_USER_PASSWORD}", "temporary": true}
+          ]
+        }
+      ]
+    }
+
