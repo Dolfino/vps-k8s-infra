@@ -5,4 +5,5 @@ namespace: business
 
 resources:
   - deployment.yaml
+  - admin-sso.yaml
   - ingress.yaml

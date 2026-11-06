@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/dolfino/biscoitoconsent-platform:66dbb4d9882141a4f3bbc76ba9fd17826d93802c
+          image: ghcr.io/dolfino/biscoitoconsent-platform:65eafdb8ea93a75b9d2190938671c11ba13b4c94
           imagePullPolicy: Always
           ports:
             - name: http
@@ -60,6 +60,10 @@ spec:
                 secretKeyRef:
                   name: consent-platform-runtime
                   key: ADMIN_TOKEN
+            - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
+            - {name: OIDC_AUDIENCE, value: "consent-admin"}
+            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,privacy-manager,analyst,operator"}
+            - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
           startupProbe:
             httpGet:
               path: /api/health
