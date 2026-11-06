@@ -43,8 +43,8 @@ spec:
             - --cookie-expire=8h
             - --cookie-refresh=5m
             - --pass-user-headers=true
-            - --pass-access-token=false
-            - --pass-authorization-header=true
+            - --pass-access-token=true
+            - --pass-authorization-header=false
             - --skip-auth-strip-headers=false
             - --set-authorization-header=false
             - --silence-ping-logging=true
