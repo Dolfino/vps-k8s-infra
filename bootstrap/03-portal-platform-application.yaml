@@ -7,6 +7,7 @@ spec:
     repoURL: https://github.com/Dolfino/vps-k8s-infra.git
     targetRevision: main
     path: apps/03-business/portal-platform
+    plugin: {name: ksops-v1.0}
   destination: {server: https://kubernetes.default.svc, namespace: business}
   syncPolicy:
     automated: {selfHeal: true, prune: false}
