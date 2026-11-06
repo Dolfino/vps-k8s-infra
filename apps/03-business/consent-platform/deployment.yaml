@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/dolfino/biscoitoconsent-platform:65eafdb8ea93a75b9d2190938671c11ba13b4c94
+          image: ghcr.io/dolfino/biscoitoconsent-platform:6afe8b0ab8f205ce3f89787d0e72fc06a1bd7a5c
           imagePullPolicy: Always
           ports:
             - name: http
