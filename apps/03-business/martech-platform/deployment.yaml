@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "role-separation-v2"
+        platform.dolfino.io/runtime-revision: "marketing-simulation-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:d88d74da2a41124fe897a04b03cc0f28faec67c1
+          image: ghcr.io/dolfino/martech-platform:926264cd8eff180e5d1cf36e0449203d2129d730
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
