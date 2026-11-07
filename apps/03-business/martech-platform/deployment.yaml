@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "phygital-coupons-v1"
+        platform.dolfino.io/runtime-revision: "role-separation-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:740c35c07db906889af389153f0926fe03459695
+          image: ghcr.io/dolfino/martech-platform:d9fdf287bd41894d393cdaa6c5f88160ecd9840c
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
@@ -34,9 +34,9 @@ spec:
             - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
-            # Until read/write authorization is split per route, only the platform
-            # super-administrator may use the administrative API.
-            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin"}
+            # Route-level authorization separates full administration, marketing
+            # management and restricted coupon redemption operations.
+            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,operator"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
           startupProbe:
             httpGet: {path: /health, port: http}

@@ -30,7 +30,7 @@ data:
           {"name": "platform-superadmin", "description": "Administracao integral da plataforma"},
           {"name": "marketing-manager", "description": "Gestao das aplicacoes de marketing"},
           {"name": "analyst", "description": "Consulta de dados e relatorios"},
-          {"name": "operator", "description": "Operacao de campanhas e formularios"}
+          {"name": "operator", "description": "Consulta de ativacoes e operacao controlada de resgates"}
         ]
       },
       "clients": [
