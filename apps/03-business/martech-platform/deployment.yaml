@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "marketing-simulation-v1"
+        platform.dolfino.io/runtime-revision: "conversions-ads-simulation-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:926264cd8eff180e5d1cf36e0449203d2129d730
+          image: ghcr.io/dolfino/martech-platform:7602fb2e76d031c4644144cdd00a3109e5422a4b
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
