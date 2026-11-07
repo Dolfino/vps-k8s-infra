@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "admin-origin-fix-v1"
+        platform.dolfino.io/runtime-revision: "phygital-coupons-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:c2d512618872c3747fe58c220241cf3a081e1368
+          image: ghcr.io/dolfino/martech-platform:740c35c07db906889af389153f0926fe03459695
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
