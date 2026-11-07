@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "chatwoot-contact-sync-v1"
+        platform.dolfino.io/runtime-revision: "chatwoot-conflict-resolution-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:73c43d63d3fd0deab6de402f578b285c4b478e62
+          image: ghcr.io/dolfino/martech-platform:03d29528803bf1eb89d10fbaa131e946054c10d9
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
