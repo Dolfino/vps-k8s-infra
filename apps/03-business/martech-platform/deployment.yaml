@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "commercial-crm-v1"
+        platform.dolfino.io/runtime-revision: "nfc-touchpoints-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:96fe389258a5fbbb9ed7d711ce7d90a83768ed0b
+          image: ghcr.io/dolfino/martech-platform:64113f17fc1f61ffc08afc775bedc023cbf4aeea
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
