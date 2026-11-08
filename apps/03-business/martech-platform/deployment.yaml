@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:3b784a3804c17b5eb57a0143e7293b07af60295f
+          image: ghcr.io/dolfino/martech-platform:622b37e74fa4559cbf8efd064f4352c5e4bf1954
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
@@ -42,6 +42,18 @@ spec:
             # management and restricted coupon redemption operations.
             - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,operator"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
+            - {name: IDENTITY_EMAIL_DELIVERY_MODE, value: "smtp"}
+            - {name: IDENTITY_EMAIL_SMTP_HOST, value: "smtp.gmail.com"}
+            - {name: IDENTITY_EMAIL_SMTP_PORT, value: "587"}
+            - name: IDENTITY_EMAIL_SMTP_USERNAME
+              valueFrom:
+                secretKeyRef: {name: chatwoot-runtime-auth, key: SMTP_USERNAME}
+            - name: IDENTITY_EMAIL_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: chatwoot-runtime-auth, key: SMTP_PASSWORD}
+            - name: IDENTITY_EMAIL_FROM
+              valueFrom:
+                secretKeyRef: {name: chatwoot-runtime-auth, key: MAILER_SENDER_EMAIL}
           startupProbe:
             httpGet: {path: /health, port: http}
             periodSeconds: 5
