@@ -32,6 +32,10 @@ spec:
             - {name: NODE_ENV, value: production}
             - {name: PORT, value: "3340"}
             - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
+            # Public identifier embedded in the qez.com.br frontend. This is not
+            # an authentication secret; request protection is layered with CORS,
+            # validation, idempotency, honeypot and rate limiting.
+            - {name: MARTECH_SITE_KEY, value: "qez_martech_public_key"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
             # Route-level authorization separates full administration, marketing
