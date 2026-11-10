@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "gf-02c2-passive-v1"
+        platform.dolfino.io/runtime-revision: "portal-root-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform@sha256:03d3166d4bee3bc02cc25bb668b429b2dfcf8b61cc68026b92e2fb350db120bd
+          image: ghcr.io/dolfino/martech-platform@sha256:ef3653fc2eeea2f5d193021771763176f3f520fda434c7fcf6c4c831c6b73fc2
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
