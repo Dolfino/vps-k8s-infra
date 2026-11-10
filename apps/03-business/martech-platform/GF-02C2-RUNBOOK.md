@@ -39,6 +39,52 @@ ser preservado até o encerramento da GF-02C.2.
    operação de split durante o smoke.
 9. Conferir logs por falhas de migração, reconciliação ou autenticação.
 
+## Aceite operacional da fase A
+
+Smoke autenticado executado em `2026-11-10T14:48:36.223Z`, com a feature flag
+desligada e sem habilitação da fase B.
+
+- operador: `david`;
+- autenticação observada pelo backend: `oidc`;
+- papel exigido pela rota: `identity:split`, concedido a
+  `platform-superadmin`;
+- requisição: `POST
+  /v1/admin/identity/merges/00000000-0000-4000-8000-000000000001/split-plan`;
+- corpo: ausente, conforme o contrato da rota de criação do plano;
+- resposta: HTTP `409`;
+- código: `identity_split_disabled`;
+- `reqId` no backend: `req-e2`;
+- tempo de resposta observado: `5.365 ms`.
+
+Contagens verificadas antes e depois da requisição:
+
+| Evidência | Antes | Depois |
+| --- | ---: | ---: |
+| `identity_split_plans` | 0 | 0 |
+| `identity_split_operations` | 0 | 0 |
+| `identity_split_events` | 0 | 0 |
+| outbox de split pendente/processando | 0 | 0 |
+| outbox de split com falha | 0 | 0 |
+| outbox de split em dead-letter | 0 | 0 |
+
+O log correlacionado pelo `reqId` confirma, na ordem, a chegada do `POST`, a
+autenticação OIDC do operador e a conclusão com HTTP `409`. A ausência de
+persistência confirma que o bloqueio pela feature flag não produziu efeito
+colateral.
+
+Estado da publicação após o smoke:
+
+- Argo CD: `Synced / Healthy`;
+- revisão GitOps: `9d5d3c43535478079bce16d10daaa8ae9ba58b02`;
+- Deployment: `1/1` disponível;
+- imagem efetiva:
+  `ghcr.io/dolfino/martech-platform@sha256:03d3166d4bee3bc02cc25bb668b429b2dfcf8b61cc68026b92e2fb350db120bd`;
+- `IDENTITY_SPLIT_ENABLED=false`;
+- nenhuma operação de split autorizada ou executada.
+
+**Resultado da fase A:** aceita. A fase B permanece em **No-Go** e depende de
+um segundo marco explícito de autorização.
+
 ## Rollback da fase A
 
 Rollback da aplicação:
