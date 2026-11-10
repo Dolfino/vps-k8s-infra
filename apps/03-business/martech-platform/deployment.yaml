@@ -12,7 +12,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: martech-platform, app.kubernetes.io/component: api}
       annotations:
-        platform.dolfino.io/runtime-revision: "nfc-touchpoints-v1"
+        platform.dolfino.io/runtime-revision: "gf-02c2-passive-v1"
     spec:
       automountServiceAccountToken: false
       imagePullSecrets: [{name: ghcr-secret}]
@@ -23,7 +23,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform:0363d18afc6f71adc0eaa02d8a34ec85547eaa20
+          image: ghcr.io/dolfino/martech-platform@sha256:03d3166d4bee3bc02cc25bb668b429b2dfcf8b61cc68026b92e2fb350db120bd
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
@@ -42,6 +42,9 @@ spec:
             # management and restricted coupon redemption operations.
             - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,operator"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
+            # GF-02C.2 phase A publishes the operational infrastructure without
+            # authorizing identity splits. Enabling it requires a second Go/No-Go.
+            - {name: IDENTITY_SPLIT_ENABLED, value: "false"}
             - {name: IDENTITY_EMAIL_DELIVERY_MODE, value: "smtp"}
             - {name: IDENTITY_EMAIL_SMTP_HOST, value: "smtp.gmail.com"}
             - {name: IDENTITY_EMAIL_SMTP_PORT, value: "587"}
