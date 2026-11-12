@@ -18,6 +18,7 @@ resources:
   - minio-evolution-policy.yaml
   - minio-evolution-bootstrap.yaml
   - chatwoot-database-bootstrap.yaml
+  - chatwoot-kanban-database-bootstrap.yaml
   - chatwoot-minio-policy.yaml
   - chatwoot-minio-bootstrap.yaml
 

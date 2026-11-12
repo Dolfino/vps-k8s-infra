@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatwoot-kanban
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chatwoot-kanban
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chatwoot-kanban
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: ghcr-secret
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: chatwoot-kanban
+          # Multi-arch image produced by commit 0e9a3a2086a0d1aeef5c237706cd92f4798b7abd.
+          image: ghcr.io/dolfino/chatwoot-kanban@sha256:1e105760f8bb187009bc358ae0df93587f3189d9f1003dda0f85753a2e9c6500
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chatwoot-kanban-config
+            - secretRef:
+                name: chatwoot-kanban-runtime-auth
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

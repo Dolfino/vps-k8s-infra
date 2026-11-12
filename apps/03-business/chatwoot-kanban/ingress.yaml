@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatwoot-kanban
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: business-chatwoot-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: kanban.ideiasmkt.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: chatwoot-kanban
+                port:
+                  number: 8000
+  tls:
+    - secretName: chatwoot-kanban-tls
+      hosts:
+        - kanban.ideiasmkt.com.br
