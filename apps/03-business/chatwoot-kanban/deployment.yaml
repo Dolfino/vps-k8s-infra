@@ -29,15 +29,25 @@ spec:
           type: RuntimeDefault
       containers:
         - name: chatwoot-kanban
-          # Multi-arch image produced by commit 46569e2.
-          image: ghcr.io/dolfino/chatwoot-kanban@sha256:b7b4503b06e0347587c4c98b154e2df15b48205dafcd286767d05e9e6dadd1ba
+          # Multi-arch image produced by commit 14228e6.
+          image: ghcr.io/dolfino/chatwoot-kanban@sha256:335bbf45196c3f715ff161abc533927fec06da7adfe64ebbd6012087eab63716
           imagePullPolicy: IfNotPresent
           env:
-            - name: REDIS_URL
+            - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
                   name: chatwoot-env
-                  key: REDIS_URL
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: chatwoot-env
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chatwoot-env
+                  key: REDIS_PASSWORD
           envFrom:
             - configMapRef:
                 name: chatwoot-kanban-config
