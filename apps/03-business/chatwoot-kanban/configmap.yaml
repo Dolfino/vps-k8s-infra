@@ -8,3 +8,4 @@ data:
   CHATWOOT_ACCOUNT_ID: "1"
   CHATWOOT_BOT_EMAIL: kanban-bot@ideiasmkt.com.br
   CHATWOOT_FRONTEND_URL: https://chatwoot.ideiasmkt.com.br
+  KANBAN_ENTRY_LABEL: enviar-kanban

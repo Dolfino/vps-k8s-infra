@@ -29,8 +29,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: chatwoot-kanban
-          # Multi-arch image produced by commit 0ab91008440fb250e9bcb0817d37c18a400d41f5.
-          image: ghcr.io/dolfino/chatwoot-kanban@sha256:f476a042f1f5ef27144669d516115e1cd866bc5b4248f34f0c36fb3928e79b20
+          # Multi-arch image produced by commit 1093105.
+          image: ghcr.io/dolfino/chatwoot-kanban@sha256:9b4dc4dafa5eaf8304222401edd43214b0df55dc844b1d375252855ddd8f0a3c
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
