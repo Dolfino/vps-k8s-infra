@@ -33,21 +33,11 @@ spec:
           image: ghcr.io/dolfino/chatwoot-kanban@sha256:335bbf45196c3f715ff161abc533927fec06da7adfe64ebbd6012087eab63716
           imagePullPolicy: IfNotPresent
           env:
-            - name: REDIS_HOST
+            - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
-                  name: chatwoot-env
-                  key: REDIS_HOST
-            - name: REDIS_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: chatwoot-env
-                  key: REDIS_PORT
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: chatwoot-env
-                  key: REDIS_PASSWORD
+                  name: chatwoot-runtime-auth
+                  key: REDIS_URL
           envFrom:
             - configMapRef:
                 name: chatwoot-kanban-config
