@@ -38,9 +38,16 @@ spec:
             - {name: MARTECH_SITE_KEY, value: "qez_martech_public_key"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
+            - {name: PUSH_OIDC_AUDIENCE, value: "centrofashion-web"}
+            - {name: PUSH_ALLOWED_ROLES, value: "merchant,platform-superadmin,marketing-manager"}
+            # Rollout PN-01 starts in dark mode. Enable only after the VAPID
+            # public/private key pair is stored in the SOPS-managed runtime Secret.
+            - {name: PUSH_SUBSCRIPTIONS_ENABLED, value: "false"}
+            - {name: PUSH_DISPATCH_ENABLED, value: "false"}
+            - {name: PUSH_AUTOMATIONS_ENABLED, value: "false"}
             # Route-level authorization separates full administration, marketing
             # management and restricted coupon redemption operations.
-            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,operator"}
+            - {name: OIDC_ADMIN_ROLES, value: "platform-superadmin,marketing-manager,analyst,operator"}
             - {name: LEGACY_ADMIN_TOKEN_ENABLED, value: "false"}
             # GF-02C.2 phase A publishes the operational infrastructure without
             # authorizing identity splits. Enabling it requires a second Go/No-Go.
@@ -72,6 +79,53 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 3
             failureThreshold: 3
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: martech-push-worker
+  labels: {app.kubernetes.io/name: martech-push-worker, app.kubernetes.io/component: worker}
+spec:
+  # Dark rollout: change to 1 only after VAPID/Redis secrets and Go/No-Go.
+  replicas: 0
+  selector:
+    matchLabels: {app.kubernetes.io/name: martech-push-worker}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: martech-push-worker, app.kubernetes.io/component: worker}
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets: [{name: ghcr-secret}]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: worker
+          image: ghcr.io/dolfino/martech-platform@sha256:ef3653fc2eeea2f5d193021771763176f3f520fda434c7fcf6c4c831c6b73fc2
+          imagePullPolicy: Always
+          command: ["node", "build/push-worker.js"]
+          envFrom:
+            - secretRef: {name: martech-platform-runtime}
+          env:
+            - {name: NODE_ENV, value: production}
+            - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
+            - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
+            - {name: PUSH_DISPATCH_ENABLED, value: "false"}
+            - {name: PUSH_AUTOMATIONS_ENABLED, value: "false"}
+            - {name: PUSH_WORKER_CONCURRENCY, value: "10"}
           resources:
             requests: {cpu: 50m, memory: 128Mi}
             limits: {cpu: 500m, memory: 512Mi}

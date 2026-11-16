@@ -30,7 +30,8 @@ data:
           {"name": "platform-superadmin", "description": "Administracao integral da plataforma"},
           {"name": "marketing-manager", "description": "Gestao das aplicacoes de marketing"},
           {"name": "analyst", "description": "Consulta de dados e relatorios"},
-          {"name": "operator", "description": "Consulta de ativacoes e operacao controlada de resgates"}
+          {"name": "operator", "description": "Consulta de ativacoes e operacao controlada de resgates"},
+          {"name": "merchant", "description": "Lojista autenticado com vinculo de loja"}
         ]
       },
       "clients": [
@@ -55,6 +56,54 @@ data:
             "post.logout.redirect.uris": "https://app.qez.com.br/*"
           },
           "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email"]
+        },
+        {
+          "clientId": "centrofashion-web",
+          "name": "Site Centro Fashion - Lojistas",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": true,
+          "bearerOnly": false,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "rootUrl": "https://qez.com.br",
+          "baseUrl": "https://qez.com.br/",
+          "redirectUris": [
+            "https://qez.com.br/*",
+            "https://www.qez.com.br/*",
+            "http://localhost:3000/*",
+            "http://127.0.0.1:3000/*"
+          ],
+          "webOrigins": [
+            "https://qez.com.br",
+            "https://www.qez.com.br",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256",
+            "post.logout.redirect.uris": "https://qez.com.br/*##https://www.qez.com.br/*"
+          },
+          "protocolMappers": [
+            {
+              "name": "store-id",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-attribute-mapper",
+              "consentRequired": false,
+              "config": {
+                "user.attribute": "store_id",
+                "claim.name": "store_id",
+                "jsonType.label": "String",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true",
+                "multivalued": "false"
+              }
+            }
+          ],
+          "defaultClientScopes": ["web-origins", "acr", "roles", "profile"]
         }
       ],
       "users": [
@@ -70,4 +119,3 @@ data:
         }
       ]
     }
-
