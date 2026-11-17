@@ -8,7 +8,10 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: identity-platform
@@ -46,6 +49,10 @@ spec:
               valueFrom: {secretKeyRef: {name: identity-runtime, key: PORTAL_CLIENT_SECRET}}
             - name: INITIAL_USER_PASSWORD
               valueFrom: {secretKeyRef: {name: identity-runtime, key: INITIAL_USER_PASSWORD}}
+            - name: SMTP_USERNAME
+              valueFrom: {secretKeyRef: {name: chatwoot-runtime-auth, key: SMTP_USERNAME}}
+            - name: SMTP_PASSWORD
+              valueFrom: {secretKeyRef: {name: chatwoot-runtime-auth, key: SMTP_PASSWORD}}
             - {name: KC_HOSTNAME, value: "https://auth.qez.com.br"}
             - {name: KC_HTTP_ENABLED, value: "true"}
             - {name: KC_PROXY_HEADERS, value: xforwarded}
@@ -85,5 +92,4 @@ spec:
             name: identity-realm-import
         - name: tmp
           emptyDir: {}
-
 

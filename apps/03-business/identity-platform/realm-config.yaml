@@ -11,6 +11,17 @@ data:
       "sslRequired": "external",
       "registrationAllowed": false,
       "resetPasswordAllowed": true,
+      "smtpServer": {
+        "host": "smtp.gmail.com",
+        "port": "587",
+        "from": "${SMTP_USERNAME}",
+        "fromDisplayName": "Centro Fashion",
+        "auth": "true",
+        "starttls": "true",
+        "ssl": "false",
+        "user": "${SMTP_USERNAME}",
+        "password": "${SMTP_PASSWORD}"
+      },
       "rememberMe": false,
       "loginWithEmailAllowed": true,
       "duplicateEmailsAllowed": false,
