@@ -32,6 +32,7 @@ spec:
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
             - secretRef: {name: martech-platform-runtime}
+            - secretRef: {name: martech-push-runtime}
           env:
             - {name: NODE_ENV, value: production}
             - {name: PORT, value: "3340"}
@@ -123,6 +124,7 @@ spec:
           command: ["node", "build/push-worker.js"]
           envFrom:
             - secretRef: {name: martech-platform-runtime}
+            - secretRef: {name: martech-push-runtime}
           env:
             - {name: NODE_ENV, value: production}
             - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
