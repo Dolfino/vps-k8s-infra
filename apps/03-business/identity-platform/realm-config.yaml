@@ -114,7 +114,7 @@ data:
               }
             }
           ],
-          "defaultClientScopes": ["web-origins", "acr", "roles", "profile"]
+          "defaultClientScopes": ["web-origins", "acr", "basic", "roles", "profile"]
         }
       ],
       "users": [

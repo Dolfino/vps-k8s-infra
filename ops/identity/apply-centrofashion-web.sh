@@ -75,7 +75,7 @@ cat > "$partial" <<'JSON'
           }
         }
       ],
-      "defaultClientScopes": ["web-origins", "acr", "roles", "profile"]
+      "defaultClientScopes": ["web-origins", "acr", "basic", "roles", "profile"]
     }
   ]
 }
@@ -92,4 +92,16 @@ if [ -z "$client_id" ]; then
 fi
 
 "$kcadm" get "clients/$client_id/protocol-mappers/models" -r qez --config "$config" | grep -q '"name" : "store-id"'
-echo 'centrofashion-web, merchant role and store-id mapper are ready.'
+
+basic_scope_json=$("$kcadm" get client-scopes -r qez --config "$config" --fields id,name)
+basic_scope_id=$(printf '%s' "$basic_scope_json" |
+  sed -n '/"id"/{s/.*"id" : "\([^"]*\)".*/\1/;h}; /"name" : "basic"/{g;p}' | head -n 1)
+if [ -z "$basic_scope_id" ]; then
+  echo 'basic client scope was not found' >&2
+  exit 1
+fi
+"$kcadm" update "clients/$client_id/default-client-scopes/$basic_scope_id" -r qez --config "$config" >/dev/null
+
+"$kcadm" get "clients/$client_id/default-client-scopes" -r qez --config "$config" --fields name |
+  grep -q '"name" : "basic"'
+echo 'centrofashion-web, merchant role, store-id mapper and basic scope are ready.'
