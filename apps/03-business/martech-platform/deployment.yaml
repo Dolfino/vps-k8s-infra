@@ -45,9 +45,9 @@ spec:
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
             - {name: PUSH_OIDC_AUDIENCE, value: "centrofashion-web"}
             - {name: PUSH_ALLOWED_ROLES, value: "merchant,platform-superadmin,marketing-manager"}
-            # Rollout PN-01 starts in dark mode. Enable only after the VAPID
-            # public/private key pair is stored in the SOPS-managed runtime Secret.
-            - {name: PUSH_SUBSCRIPTIONS_ENABLED, value: "false"}
+            # PN-01 stage 1: subscriptions are enabled after VAPID and OIDC
+            # validation; dispatch and automations remain independently disabled.
+            - {name: PUSH_SUBSCRIPTIONS_ENABLED, value: "true"}
             - {name: PUSH_DISPATCH_ENABLED, value: "false"}
             - {name: PUSH_AUTOMATIONS_ENABLED, value: "false"}
             # Route-level authorization separates full administration, marketing
