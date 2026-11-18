@@ -33,6 +33,7 @@ spec:
           envFrom:
             - secretRef: {name: martech-platform-runtime}
             - secretRef: {name: martech-push-runtime}
+            - secretRef: {name: martech-push-queue-runtime}
           env:
             - {name: NODE_ENV, value: production}
             - {name: PORT, value: "3340"}
@@ -45,10 +46,10 @@ spec:
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
             - {name: PUSH_OIDC_AUDIENCE, value: "centrofashion-web"}
             - {name: PUSH_ALLOWED_ROLES, value: "merchant,platform-superadmin,marketing-manager"}
-            # PN-01 stage 1: subscriptions are enabled after VAPID and OIDC
-            # validation; dispatch and automations remain independently disabled.
+            # PN-01 controlled rollout: subscriptions and manual dispatch are
+            # enabled; event-driven automations remain independently disabled.
             - {name: PUSH_SUBSCRIPTIONS_ENABLED, value: "true"}
-            - {name: PUSH_DISPATCH_ENABLED, value: "false"}
+            - {name: PUSH_DISPATCH_ENABLED, value: "true"}
             - {name: PUSH_AUTOMATIONS_ENABLED, value: "false"}
             # Route-level authorization separates full administration, marketing
             # management and restricted coupon redemption operations.
@@ -102,8 +103,8 @@ metadata:
   name: martech-push-worker
   labels: {app.kubernetes.io/name: martech-push-worker, app.kubernetes.io/component: worker}
 spec:
-  # Dark rollout: change to 1 only after VAPID/Redis secrets and Go/No-Go.
-  replicas: 0
+  # Single worker for the controlled manual-dispatch rollout.
+  replicas: 1
   selector:
     matchLabels: {app.kubernetes.io/name: martech-push-worker}
   template:
@@ -125,11 +126,12 @@ spec:
           envFrom:
             - secretRef: {name: martech-platform-runtime}
             - secretRef: {name: martech-push-runtime}
+            - secretRef: {name: martech-push-queue-runtime}
           env:
             - {name: NODE_ENV, value: production}
             - {name: MARTECH_PUBLIC_URL, value: "https://martech.qez.com.br"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
-            - {name: PUSH_DISPATCH_ENABLED, value: "false"}
+            - {name: PUSH_DISPATCH_ENABLED, value: "true"}
             - {name: PUSH_AUTOMATIONS_ENABLED, value: "false"}
             - {name: PUSH_WORKER_CONCURRENCY, value: "10"}
           resources:
