@@ -27,7 +27,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
-          image: ghcr.io/dolfino/martech-platform@sha256:0e805fbe99b747cf6c9b476fd8ab1e939e403aa206bf6d45dc8c92ae430c361e
+          image: ghcr.io/dolfino/martech-platform@sha256:10bab0582cebb23544d5c0236e02ef2c3c91765a513f6a4bbed0fddea11e5ec1
           imagePullPolicy: Always
           ports: [{name: http, containerPort: 3340, protocol: TCP}]
           envFrom:
@@ -122,7 +122,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: worker
-          image: ghcr.io/dolfino/martech-platform@sha256:0e805fbe99b747cf6c9b476fd8ab1e939e403aa206bf6d45dc8c92ae430c361e
+          image: ghcr.io/dolfino/martech-platform@sha256:10bab0582cebb23544d5c0236e02ef2c3c91765a513f6a4bbed0fddea11e5ec1
           imagePullPolicy: Always
           command: ["node", "build/push-worker.js"]
           envFrom:
