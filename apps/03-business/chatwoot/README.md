@@ -70,4 +70,17 @@ Antes da alteracao foi criado o backup
 Chatwoot e da Evolution API e checksums SHA-256 validados. O teste ponta a ponta
 do WhatsApp Comercial criou a conversa 1838 e foi resolvido apos a validacao.
 
+### Equipe comercial
+
+Em 2026-11-24 foram convidados seis agentes `@centrofashion.com` e vinculados
+ao time `comercial`, ao inbox 9 (`Formulario do Site`) e ao inbox 10
+(`WhatsApp - Comercial`). Os dois inboxes usam distribuicao automatica para que
+novos leads tenham responsavel individual. A etapa `Perdido` permanece visivel
+ao time inteiro, permitindo que o plantonista revisite e assuma oportunidades
+de outros corretores.
+
+Os convites de confirmacao foram processados pelo SMTP sem erro. Antes do
+onboarding foi criado e validado o dump
+`/root/backups/commercial-team-20261124T145754Z/chatwoot_production.dump`.
+
 Após revisar a prévia, acrescentar `--apply` para gravar a alteração. O token continua desnecessário enquanto o CNAME atual estiver correto.
