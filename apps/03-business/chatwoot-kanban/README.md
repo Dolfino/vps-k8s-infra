@@ -51,7 +51,7 @@ kubectl kustomize apps/03-business/chatwoot-kanban
 Desde 2026-11-24, `KANBAN_AUTO_INBOX_IDS=9,10` limita a entrada automatica ao
 formulario do site e ao WhatsApp Comercial. Os inboxes antigos de WhatsApp
 continuam ativos no Chatwoot para atendimento e historico, mas nao alimentam
-automaticamente o pipeline. A etiqueta `enviar-kanban` continua disponivel
-para inclusao manual de conversas de outros canais.
+automaticamente o pipeline. A entrada manual por etiqueta esta desabilitada
+para manter o quadro exclusivo desses dois canais.
 
 O `secret-example.yaml` e estes manifestos não contêm credenciais reais.
