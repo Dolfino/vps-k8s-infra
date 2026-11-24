@@ -29,8 +29,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: chatwoot-kanban
-          # Multi-arch image produced by commit e0857ea.
-          image: ghcr.io/dolfino/chatwoot-kanban@sha256:7af1e461a090cac3d633525bd2d8b9ab8a5825aebbb26c7b89af50b909a21e01
+          # Multi-arch image produced by commit 63a7eca.
+          image: ghcr.io/dolfino/chatwoot-kanban@sha256:75625cb4b9472b983a27988dcd0f927cfee6cd2c3847acc5f2fcd62959e7dbe7
           imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_URL

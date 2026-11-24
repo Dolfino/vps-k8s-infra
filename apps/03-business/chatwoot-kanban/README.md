@@ -54,4 +54,9 @@ continuam ativos no Chatwoot para atendimento e historico, mas nao alimentam
 automaticamente o pipeline. A entrada manual por etiqueta esta desabilitada
 para manter o quadro exclusivo desses dois canais.
 
+`KANBAN_IDENTITY_SECRET` tem o mesmo valor nos secrets SOPS do Chatwoot e do
+Kanban. Ele assina a identidade do usuário logado para manter os cards ativos
+visíveis ao corretor responsável e compartilhar a etapa `Perdido` com o time
+comercial.
+
 O `secret-example.yaml` e estes manifestos não contêm credenciais reais.
