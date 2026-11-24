@@ -1,0 +1,345 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: automation
+  labels:
+    app.kubernetes.io/part-of: automation-platform
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: automation
+  labels:
+    app: n8n
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-runner-modules
+  namespace: automation
+  labels:
+    app: n8n
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n8n-task-runners-config
+  namespace: automation
+data:
+  n8n-task-runners.json: |-
+    {
+      "task-runners": [
+        {
+          "runner-type": "javascript",
+          "workdir": "/home/runner",
+          "command": "/usr/local/bin/node",
+          "args": [
+            "--disallow-code-generation-from-strings",
+            "--disable-proto=delete",
+            "/opt/runners/task-runner-javascript/dist/start.js"
+          ],
+          "health-check-server-port": "5681",
+          "allowed-env": [
+            "PATH",
+            "GENERIC_TIMEZONE",
+            "NODE_OPTIONS",
+            "NODE_PATH",
+            "N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT",
+            "N8N_RUNNERS_GRACEFUL_SHUTDOWN_TIMEOUT",
+            "N8N_RUNNERS_SHUTDOWN_FORCE_KILL_MARGIN",
+            "N8N_RUNNERS_TASK_TIMEOUT",
+            "N8N_RUNNERS_MAX_CONCURRENCY",
+            "N8N_SENTRY_DSN",
+            "N8N_VERSION",
+            "ENVIRONMENT",
+            "DEPLOYMENT_NAME",
+            "HOME"
+          ],
+          "env-overrides": {
+            "NODE_FUNCTION_ALLOW_BUILTIN": "*",
+            "NODE_FUNCTION_ALLOW_EXTERNAL": "*",
+            "N8N_RUNNERS_HEALTH_CHECK_SERVER_HOST": "0.0.0.0"
+          }
+        },
+        {
+          "runner-type": "python",
+          "workdir": "/home/runner",
+          "command": "/opt/runners/task-runner-python/.venv/bin/python",
+          "args": [
+            "-I",
+            "-B",
+            "-X",
+            "disable_remote_debug",
+            "-m",
+            "src.main"
+          ],
+          "health-check-server-port": "5682",
+          "allowed-env": [
+            "PATH",
+            "N8N_RUNNERS_LAUNCHER_LOG_LEVEL",
+            "N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT",
+            "N8N_RUNNERS_GRACEFUL_SHUTDOWN_TIMEOUT",
+            "N8N_RUNNERS_TASK_TIMEOUT",
+            "N8N_RUNNERS_MAX_CONCURRENCY",
+            "N8N_SENTRY_DSN",
+            "N8N_VERSION",
+            "ENVIRONMENT",
+            "DEPLOYMENT_NAME"
+          ],
+          "env-overrides": {
+            "N8N_RUNNERS_STDLIB_ALLOW": "json,math,datetime,re,statistics,random,collections,itertools,functools,decimal,uuid,base64,hashlib,hmac,urllib",
+            "N8N_RUNNERS_EXTERNAL_ALLOW": ""
+          }
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: automation
+  labels:
+    app: n8n
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+        - name: n8n
+          image: docker.io/n8nio/n8n:2.44.7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5678
+              protocol: TCP
+          env:
+            - name: N8N_RUNNERS_MODE
+              value: "external"
+            - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+              value: "0.0.0.0"
+            - name: N8N_RUNNERS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-runner-token
+                  key: auth-token
+            - name: N8N_NATIVE_PYTHON_RUNNER
+              value: "true"
+            - name: NODE_ENV
+              value: "production"
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_PROTOCOL
+              value: "https"
+            - name: N8N_HOST
+              value: "n8n.ideiasmkt.com.br"
+            - name: N8N_WEBHOOK_URL
+              value: "https://n8n.ideiasmkt.com.br/"
+            - name: GENERIC_TIMEZONE
+              value: "America/Sao_Paulo"
+            - name: TZ
+              value: "America/Sao_Paulo"
+            - name: N8N_DEFAULT_BINARY_DATA_MODE
+              value: "filesystem"
+            - name: EXECUTIONS_DATA_PRUNE
+              value: "true"
+            - name: EXECUTIONS_DATA_MAX_AGE
+              value: "168"
+            - name: EXECUTIONS_DATA_PRUNE_MAX_COUNT
+              value: "1000"
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_ENABLED_MODULES
+              value: "agents,instance-ai"
+            - name: NODE_FUNCTION_ALLOW_EXTERNAL
+              value: "*"
+            - name: NODE_FUNCTION_ALLOW_BUILTIN
+              value: "*"
+            - name: N8N_PROXY_HOPS
+              value: "1"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /home/node/.n8n
+              name: n8n-storage
+          readinessProbe:
+            httpGet:
+              path: /healthz/readiness
+              port: 5678
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5678
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+        - name: task-runners
+          image: docker.io/n8nio/runners:2.44.7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: runner-health
+              containerPort: 5680
+              protocol: TCP
+          env:
+            - name: N8N_RUNNERS_TASK_BROKER_URI
+              value: "http://127.0.0.1:5679"
+            - name: N8N_RUNNERS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-runner-token
+                  key: auth-token
+            - name: N8N_NATIVE_PYTHON_RUNNER
+              value: "true"
+            - name: N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT
+              value: "15"
+            - name: N8N_RUNNERS_LAUNCHER_LOG_LEVEL
+              value: "info"
+            - name: GENERIC_TIMEZONE
+              value: "America/Sao_Paulo"
+            - name: NODE_PATH
+              value: "/usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /etc/n8n-task-runners.json
+              name: runner-config
+              readOnly: true
+              subPath: n8n-task-runners.json
+            - mountPath: /usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules
+              name: runner-modules
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5680
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: runner-config
+          configMap:
+            defaultMode: 420
+            name: n8n-task-runners-config
+            items:
+              - key: n8n-task-runners.json
+                path: n8n-task-runners.json
+        - name: runner-modules
+          persistentVolumeClaim:
+            claimName: n8n-runner-modules
+        - name: n8n-storage
+          persistentVolumeClaim:
+            claimName: n8n-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: automation
+  labels:
+    app: n8n
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 5678
+      targetPort: 5678
+  selector:
+    app: n8n
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: automation
+spec:
+  redirectScheme:
+    permanent: true
+    scheme: https
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: automation
+  labels:
+    app: n8n
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: automation-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: chat.ideiasmkt.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n
+                port:
+                  number: 5678
+    - host: n8n.ideiasmkt.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n
+                port:
+                  number: 5678
+  tls:
+    - hosts:
+        - n8n.ideiasmkt.com.br
+      secretName: n8n-tls
+    - hosts:
+        - chat.ideiasmkt.com.br
+      secretName: n8n-chat-tls
