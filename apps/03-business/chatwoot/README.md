@@ -54,4 +54,20 @@ Se o DNS precisar de reparo, o token pode ficar no `.env` local do checkout Chat
 python3 ops/dns/ensure-chatwoot-record.py --env-file ../Chatwoot/.env
 ```
 
+## Roteamento comercial
+
+Em 2026-11-24 foi criado o inbox 10, `WhatsApp - Comercial`, integrado a
+instancia `Comercial` da Evolution API e ao numero (85) 3211-3321. O inbox 9,
+`Formulario do Site`, permanece ativo. Ambos entram automaticamente no Kanban.
+
+Os inboxes 6 (`WhatsApp - CF Empreendedor`), 7 (`WhatsApp - Marketing 2`) e 8
+(`WhatsApp - Marketing 3`) permanecem habilitados no Chatwoot para receber e
+responder mensagens, mas foram retirados da entrada automatica do Kanban. As
+conversas e os historicos nao foram removidos.
+
+Antes da alteracao foi criado o backup
+`/root/backups/channel-switch-20261124T132500`, com dumps dos bancos do
+Chatwoot e da Evolution API e checksums SHA-256 validados. O teste ponta a ponta
+do WhatsApp Comercial criou a conversa 1838 e foi resolvido apos a validacao.
+
 Após revisar a prévia, acrescentar `--apply` para gravar a alteração. O token continua desnecessário enquanto o CNAME atual estiver correto.

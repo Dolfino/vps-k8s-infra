@@ -46,4 +46,12 @@ autenticação do painel e correção da verificação de webhooks.
 kubectl kustomize apps/03-business/chatwoot-kanban
 ```
 
+## Canais automaticos em producao
+
+Desde 2026-11-24, `KANBAN_AUTO_INBOX_IDS=9,10` limita a entrada automatica ao
+formulario do site e ao WhatsApp Comercial. Os inboxes antigos de WhatsApp
+continuam ativos no Chatwoot para atendimento e historico, mas nao alimentam
+automaticamente o pipeline. A etiqueta `enviar-kanban` continua disponivel
+para inclusao manual de conversas de outros canais.
+
 O `secret-example.yaml` e estes manifestos não contêm credenciais reais.
