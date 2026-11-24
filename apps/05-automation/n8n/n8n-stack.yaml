@@ -180,6 +180,14 @@ spec:
               value: "*"
             - name: N8N_PROXY_HOPS
               value: "1"
+            - name: N8N_UNVERIFIED_PACKAGES_ENABLED
+              value: "false"
+            - name: N8N_RUNNERS_TASK_TIMEOUT
+              value: "60"
+            - name: N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES
+              value: "268435456"
+            - name: N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES
+              value: "1000"
           resources:
             requests:
               cpu: 100m
@@ -231,6 +239,8 @@ spec:
               value: "America/Sao_Paulo"
             - name: NODE_PATH
               value: "/usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules"
+            - name: N8N_RUNNERS_TASK_TIMEOUT
+              value: "60"
           resources:
             requests:
               cpu: 100m
