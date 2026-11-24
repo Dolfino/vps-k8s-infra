@@ -130,7 +130,7 @@ spec:
     spec:
       containers:
         - name: n8n
-          image: docker.io/n8nio/n8n:2.44.7
+          image: docker.io/n8nio/n8n:2.49.5
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -207,7 +207,7 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
         - name: task-runners
-          image: docker.io/n8nio/runners:2.44.7
+          image: docker.io/n8nio/runners:2.49.5
           imagePullPolicy: IfNotPresent
           ports:
             - name: runner-health
