@@ -42,8 +42,9 @@ spec:
             # an authentication secret; request protection is layered with CORS,
             # validation, idempotency, honeypot and rate limiting.
             - {name: MARTECH_SITE_KEY, value: "qez_martech_public_key"}
-            # Dedicated API inbox for website lead conversations.
-            - {name: CHATWOOT_INBOX_ID, value: "9"}
+            # Website leads open directly in the commercial WhatsApp inbox so
+            # agent replies are delivered by the Evolution Comercial instance.
+            - {name: CHATWOOT_INBOX_ID, value: "10"}
             - {name: OIDC_ISSUER_URL, value: "https://auth.qez.com.br/realms/qez"}
             - {name: OIDC_AUDIENCE, value: "martech-admin"}
             - {name: PUSH_OIDC_AUDIENCE, value: "centrofashion-web"}

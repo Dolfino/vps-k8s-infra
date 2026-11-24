@@ -58,7 +58,9 @@ python3 ops/dns/ensure-chatwoot-record.py --env-file ../Chatwoot/.env
 
 Em 2026-11-24 foi criado o inbox 10, `WhatsApp - Comercial`, integrado a
 instancia `Comercial` da Evolution API e ao numero (85) 3211-3321. O inbox 9,
-`Formulario do Site`, permanece ativo. Ambos entram automaticamente no Kanban.
+`Formulario do Site`, permanece ativo para o historico. Novos leads enviados
+pelo formulario sao criados diretamente no inbox 10 para que a resposta do
+agente saia pelo WhatsApp Comercial. Ambos entram automaticamente no Kanban.
 
 Os inboxes 6 (`WhatsApp - CF Empreendedor`), 7 (`WhatsApp - Marketing 2`) e 8
 (`WhatsApp - Marketing 3`) permanecem habilitados no Chatwoot para receber e
