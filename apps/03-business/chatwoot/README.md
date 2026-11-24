@@ -1,6 +1,6 @@
 # Chatwoot no K3s
 
-Instalação em `chatwoot.ideiasmkt.com.br` no nó `srv910054`. O chart oficial Chatwoot 2.0.25 instala a aplicação v4.16.2; seus subcharts PostgreSQL e Redis estão desativados. A instância usa os serviços compartilhados no namespace `storage`, com banco, usuário e bucket exclusivos.
+Instalação em `chatwoot.ideiasmkt.com.br` no nó `srv910054`. O chart Chatwoot 2.0.25 executa a imagem customizada v4.20.1-native, fixada por digest; seus subcharts PostgreSQL e Redis estão desativados. A instância usa os serviços compartilhados no namespace `storage`, com banco, usuário e bucket exclusivos.
 
 ## Estado da implantação
 
@@ -24,7 +24,9 @@ O Instagram Business Login usa `INSTAGRAM_APP_ID` e `INSTAGRAM_APP_SECRET` espec
 
 Consulta de leitura à Graph API com token de usuário Meta em 2026-09-29 confirmou acesso à página `Centro Fashion Fortaleza`, mas não retornou `instagram_business_account` nem `connected_instagram_account` para ela. O token tem permissões de páginas e Messenger, sem permissões de Instagram. O site oficial do Centro Fashion menciona `@centrofashionfor` como perfil Instagram; confirmar com o proprietário antes de vincular esse perfil. O token de usuário não revela a chave secreta do produto Instagram.
 
-O usuário decidiu operar sem backup do banco `chatwoot_production` e do bucket `chatwoot-media`. Esses dados podem ser perdidos permanentemente se o armazenamento ou a VPS falhar. Os scripts em `ops/disaster-recovery/` são exclusivos do laboratório `k3d-lab-sre` e não protegem esta implantação.
+Antes da atualização para v4.20.1, em 2026-11-23, foi criado o snapshot `/root/backups/chatwoot/pre-upgrade-v4.17.0-20261123T150007` com o banco `chatwoot_production` e 6.792 objetos (aproximadamente 11 GiB) do bucket `chatwoot-media`. A restauração do banco e do bucket foi validada em destinos temporários; o pacote `.tar` tem SHA-256 `424855bcb1a45cd4195a78ff8bb8c5f8211c21e04af6fa38bd94362e4aa93ec9`. Este snapshot é pontual e não substitui uma política recorrente e externa de backup.
+
+Em 2026-11-24, a migração v4.17.0 → v4.20.1 foi ensaiada em um clone restaurado do banco. O Rails v4.20.1 concluiu `db:chatwoot_prepare` e confirmou a conta, o inbox 9 (`Formulário do Site`), a conversa 1809 e as contagens principais antes da alteração em produção.
 
 ## Sequência de implantação
 
