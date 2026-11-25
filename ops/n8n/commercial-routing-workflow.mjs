@@ -73,11 +73,47 @@ const marketingMenu = 'Qual assunto de Marketing você deseja tratar?\n\n' +
   '4️⃣ Divulgação de inauguração\n5️⃣ Parcerias e eventos\n6️⃣ Relacionamento com lojistas\n' +
   '7️⃣ Outro assunto de Marketing\n\nDigite apenas o número da opção desejada.';
 
+const newBusinessMenu = 'Ótimo! Você tem interesse em qual tipo de espaço?\n\n' +
+  '1️⃣ Loja\n2️⃣ Box\n3️⃣ Quiosque\n4️⃣ Espaço para ação ou exposição\n5️⃣ Ainda não sei qual espaço preciso\n\n' +
+  'Digite apenas o número da opção desejada.';
+const newBusinessRoutes = {
+  '1': ['assunto-espaco-loja', 'uma loja'],
+  '2': ['assunto-espaco-box', 'um box'],
+  '3': ['assunto-espaco-quiosque', 'um quiosque'],
+  '4': ['assunto-espaco-acao-exposicao', 'um espaço para ação ou exposição'],
+  '5': ['assunto-espaco-indefinido', 'ajuda para definir o espaço ideal']
+};
+const brokers = [9, 10, 11, 12, 13];
+const finishNewBusiness = async selected => {
+  await addLabels(selected[0], 'enviar-kanban', 'setor-novos-negocios');
+  await request(base + '/assignments', { team_id: 2, assignee_id: brokers[conversationId % brokers.length] });
+  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já foi encaminhada a um corretor, que continuará por aqui.');
+};
+
 const hasTerminalRoute = existingLabels.some(label => label === 'enviar-kanban' || label.startsWith('setor-') || label.startsWith('assunto-'));
+const hasNewBusinessRoute = existingLabels.includes('enviar-kanban') && existingLabels.includes('setor-novos-negocios');
+const hasSpaceSubtype = existingLabels.some(label => label.startsWith('assunto-espaco-'));
+if (hasNewBusinessRoute && !hasSpaceSubtype) {
+  const selected = newBusinessRoutes[numericChoice];
+  if (!selected) {
+    await send('Para concluir o encaminhamento, digite um número de 1 a 5.\n\n' + newBusinessMenu);
+    return [{ json: { conversationId, route: 'invalid-new-business-option' } }];
+  }
+  await addLabels(selected[0]);
+  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já está com um corretor, que continuará por aqui.');
+  return [{ json: { conversationId, route: selected[0], compatibility: true } }];
+}
+const greeting = /^(ola|oi|bom dia|boa tarde|boa noite)[!. ]*$/.test(text);
+if (hasNewBusinessRoute && hasSpaceSubtype && greeting && !existingLabels.includes('triagem-lembrete-enviado')) {
+  await addLabels('triagem-lembrete-enviado');
+  await send('Seu atendimento já foi encaminhado ao Comercial. Um corretor continuará a conversa por aqui.');
+  return [{ json: { conversationId, route: 'broker-waiting-reminder' } }];
+}
 if (hasTerminalRoute) return [];
 const state = existingLabels.includes('triagem-lojista') ? 'tenant' :
   existingLabels.includes('triagem-catalogo') ? 'catalog' :
   existingLabels.includes('triagem-marketing') ? 'marketing' :
+  existingLabels.includes('triagem-novos-negocios') ? 'new-business' :
   existingLabels.includes('triagem-menu-principal') ? 'main' : 'new';
 
 if (state === 'new') {
@@ -89,13 +125,10 @@ if (state === 'new') {
 
 if (state === 'main') {
   if (numericChoice === '1') {
-    await addLabels('enviar-kanban', 'setor-novos-negocios');
-    const brokers = [9, 10, 11, 12, 13];
-    await request(base + '/assignments', { team_id: 2, assignee_id: brokers[conversationId % brokers.length] });
-    await send('Ótimo! Você tem interesse em qual tipo de espaço?\n\n' +
-      '1️⃣ Loja\n2️⃣ Box\n3️⃣ Quiosque\n4️⃣ Espaço para ação ou exposição\n5️⃣ Ainda não sei qual espaço preciso\n\n' +
-      'Para agilizar, informe também seu nome, o nome da empresa ou loja, se houver, e seu segmento de atuação. Um corretor dará continuidade por aqui.');
-    return [{ json: { conversationId, route: 'new-business' } }];
+    await addLabels('triagem-novos-negocios');
+    await assignAgent(14);
+    await send(newBusinessMenu);
+    return [{ json: { conversationId, route: 'new-business-menu' } }];
   }
   if (numericChoice === '2') {
     await addLabels('triagem-lojista'); await assignAgent(14); await send(tenantMenu);
@@ -121,6 +154,16 @@ if (state === 'main') {
   }
   await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 6.\n\n' + mainMenu);
   return [{ json: { conversationId, route: 'invalid-main-option' } }];
+}
+
+if (state === 'new-business') {
+  const selected = newBusinessRoutes[numericChoice];
+  if (!selected) {
+    await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 5.\n\n' + newBusinessMenu);
+    return [{ json: { conversationId, route: 'invalid-new-business-option' } }];
+  }
+  await finishNewBusiness(selected);
+  return [{ json: { conversationId, route: selected[0] } }];
 }
 
 if (state === 'tenant') {

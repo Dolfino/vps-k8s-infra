@@ -21,8 +21,11 @@ workflow ID `cfCommercialRouting001`.
 
 Inbox 10 uses a two-level service tree:
 
-- new business is assigned to the five-broker rotation and receives the
-  `enviar-kanban` label;
+- new business first asks for the desired space type; only after that answer is
+  it assigned to the five-broker rotation and receives the `enviar-kanban`
+  label, avoiding incomplete Kanban cards;
+- after the handoff, a new greeting receives one confirmation that a broker
+  will continue the conversation; subsequent messages remain with the human;
 - current tenant requests receive subject labels and are initially assigned to
   the commercial support analyst for manual sector handoff;
 - store and product searches are assigned to commercial support;

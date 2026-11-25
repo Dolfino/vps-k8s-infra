@@ -53,9 +53,36 @@ function payload(content, labels = [], overrides = {}) {
 
 {
   const { result, calls } = await run(payload('1', ['triagem-menu-principal']));
-  assert.equal(result[0].json.route, 'new-business');
-  assert.ok(calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('enviar-kanban')));
-  assert.ok(calls.some(call => call.path.endsWith('/assignments') && [9, 10, 11, 12, 13].includes(call.body.assignee_id)));
+  assert.equal(result[0].json.route, 'new-business-menu');
+  assert.ok(calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('triagem-novos-negocios')));
+  assert.ok(!calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('enviar-kanban')));
+  assert.ok(!calls.some(call => call.path.endsWith('/assignments') && [9, 10, 11, 12, 13].includes(call.body.assignee_id)));
+
+  const box = await run(payload('2', ['triagem-menu-principal', 'triagem-novos-negocios']));
+  assert.equal(box.result[0].json.route, 'assunto-espaco-box');
+  assert.ok(box.calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('enviar-kanban')
+    && call.body.labels.includes('setor-novos-negocios') && call.body.labels.includes('assunto-espaco-box')));
+  assert.ok(box.calls.some(call => call.path.endsWith('/assignments') && [9, 10, 11, 12, 13].includes(call.body.assignee_id)));
+  assert.ok(box.calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('Você procura um box')));
+}
+
+{
+  const existing = await run(payload('2', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios']));
+  assert.equal(existing.result[0].json.route, 'assunto-espaco-box');
+  assert.equal(existing.result[0].json.compatibility, true);
+  assert.ok(existing.calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('assunto-espaco-box')));
+  assert.ok(!existing.calls.some(call => call.path.endsWith('/assignments')));
+}
+
+{
+  const reminder = await run(payload('Olá', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-box']));
+  assert.equal(reminder.result[0].json.route, 'broker-waiting-reminder');
+  assert.ok(reminder.calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('triagem-lembrete-enviado')));
+  assert.ok(reminder.calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('já foi encaminhado')));
+
+  const repeated = await run(payload('Oi', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-box', 'triagem-lembrete-enviado']));
+  assert.deepEqual(repeated.result, []);
+  assert.deepEqual(repeated.calls, []);
 }
 
 {
