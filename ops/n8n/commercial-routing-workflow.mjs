@@ -28,9 +28,12 @@ const toMillis = value => {
 };
 const conversationCreatedAt = toMillis(payload.conversation?.created_at);
 const messageCreatedAt = toMillis(payload.created_at);
+const currentAssigneeId = Number(
+  payload.conversation?.meta?.assignee?.id || payload.conversation?.assignee?.id || 0
+);
 
 // Preserve existing operational conversations that predate this routing tree.
-if (!hasRoutingState && conversationCreatedAt && messageCreatedAt &&
+if (!hasRoutingState && currentAssigneeId && conversationCreatedAt && messageCreatedAt &&
     messageCreatedAt - conversationCreatedAt > 30 * 60 * 1000) return [];
 if (existingLabels.includes('enviar-kanban')) return [];
 if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
