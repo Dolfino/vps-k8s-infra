@@ -26,6 +26,8 @@ Inbox 10 uses a two-level service tree:
   label, avoiding incomplete Kanban cards;
 - after the handoff, a new greeting receives one confirmation that a broker
   will continue the conversation; subsequent messages remain with the human;
+- `menu`, `novo assunto`, `outro assunto`, or `0` restarts the service tree
+  while preserving conversation history and any existing Kanban card;
 - current tenant requests receive subject labels and are initially assigned to
   the commercial support analyst for manual sector handoff;
 - store and product searches are assigned to commercial support;

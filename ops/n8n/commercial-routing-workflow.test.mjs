@@ -86,6 +86,22 @@ function payload(content, labels = [], overrides = {}) {
 }
 
 {
+  const reopened = await run(payload('menu', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-box', 'cliente-vip']));
+  assert.equal(reopened.result[0].json.route, 'new-subject-menu');
+  const labels = reopened.calls.find(call => call.path.endsWith('/labels')).body.labels;
+  assert.deepEqual(labels.sort(), ['cliente-vip', 'enviar-kanban', 'triagem-menu-principal', 'triagem-novo-assunto'].sort());
+  assert.ok(reopened.calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('card comercial existente serão preservados')));
+
+  const hotel = await run(payload('5', ['cliente-vip', 'enviar-kanban', 'triagem-menu-principal', 'triagem-novo-assunto']));
+  assert.equal(hotel.result[0].json.route, 'hotel');
+  const hotelLabels = hotel.calls.find(call => call.path.endsWith('/labels')).body.labels;
+  assert.ok(hotelLabels.includes('enviar-kanban'));
+  assert.ok(hotelLabels.includes('setor-hotel'));
+  assert.ok(!hotelLabels.includes('triagem-novo-assunto'));
+  assert.ok(hotel.calls.some(call => call.path.endsWith('/assignments') && call.body.team_id === 3));
+}
+
+{
   const { result } = await run(payload('2', ['triagem-menu-principal']));
   assert.equal(result[0].json.route, 'tenant-menu');
   const finance = await run(payload('2', ['triagem-menu-principal', 'triagem-lojista']));
