@@ -68,7 +68,8 @@ data:
             "N8N_VERSION",
             "ENVIRONMENT",
             "DEPLOYMENT_NAME",
-            "HOME"
+            "HOME",
+            "CHATWOOT_BOT_TOKEN"
           ],
           "env-overrides": {
             "NODE_FUNCTION_ALLOW_BUILTIN": "*",
@@ -188,6 +189,11 @@ spec:
               value: "268435456"
             - name: N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES
               value: "1000"
+            - name: CHATWOOT_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-chatwoot-runtime
+                  key: CHATWOOT_BOT_TOKEN
           resources:
             requests:
               cpu: 100m
@@ -241,6 +247,11 @@ spec:
               value: "/usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules"
             - name: N8N_RUNNERS_TASK_TIMEOUT
               value: "60"
+            - name: CHATWOOT_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-chatwoot-runtime
+                  key: CHATWOOT_BOT_TOKEN
           resources:
             requests:
               cpu: 100m
