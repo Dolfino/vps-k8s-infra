@@ -15,6 +15,26 @@ const consumer = /\b(onde vende|onde encontro|procuro|comprar roupa|comprar prod
 const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|ser lojista|empreender|abrir (uma )?loja|montar (uma )?loja|comprar (uma )?(loja|box|quiosque|ponto|espaco)|compra (de )?(loja|box|quiosque|ponto|espaco)|quero (uma )?(loja|box|quiosque)|valor(es)? (do |de |para )?(aluguel|box|loja|quiosque|espaco)|tamanho(s)? (de |do )?(box|loja|quiosque|espaco)|box disponivel|loja disponivel|espaco disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
 const assisted = text === '2' || text === '3' || consumer;
 const route = commercial && !consumer ? 'commercial' : assisted ? 'assistant' : 'menu';
+const existingLabels = (payload.conversation?.labels || [])
+  .map(label => typeof label === 'string' ? label : label?.title)
+  .filter(Boolean);
+const hasRoutingState = existingLabels.some(label =>
+  ['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada'].includes(label)
+);
+const toMillis = value => {
+  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
+  const parsed = Date.parse(String(value || ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+const conversationCreatedAt = toMillis(payload.conversation?.created_at);
+const messageCreatedAt = toMillis(payload.created_at);
+
+// Preserve existing operational conversations that predate this routing tree.
+if (!hasRoutingState && conversationCreatedAt && messageCreatedAt &&
+    messageCreatedAt - conversationCreatedAt > 30 * 60 * 1000) return [];
+if (existingLabels.includes('enviar-kanban')) return [];
+if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
+if (existingLabels.includes('triagem-menu-enviada') && route === 'menu') return [];
 
 const token = process.env.CHATWOOT_BOT_TOKEN;
 if (!token) throw new Error('CHATWOOT_BOT_TOKEN unavailable');
@@ -34,14 +54,13 @@ function request(path, body) {
 const base = '/api/v1/accounts/1/conversations/' + conversationId;
 let reply;
 if (route === 'commercial') {
-  const existingLabels = (payload.conversation?.labels || [])
-    .map(label => typeof label === 'string' ? label : label?.title)
-    .filter(Boolean);
   await request(base + '/labels', { labels: [...new Set([...existingLabels, 'enviar-kanban'])] });
   const brokers = [9, 10, 11, 12, 13];
   await request(base + '/assignments', { assignee_id: brokers[conversationId % brokers.length] });
   reply = 'Identificamos seu interesse em ter um espaço no Centro Fashion. 🏪\n\nPara agilizar o atendimento, informe o tipo de espaço desejado (loja, box ou quiosque), seu segmento e o tamanho aproximado. Um corretor dará continuidade por aqui.';
 } else {
+  const routingLabel = route === 'assistant' ? 'triagem-marilisy' : 'triagem-menu-enviada';
+  await request(base + '/labels', { labels: [...new Set([...existingLabels, routingLabel])] });
   await request(base + '/assignments', { assignee_id: 14 });
   reply = route === 'assistant'
     ? 'Entendi! Sua solicitação é sobre lojas, produtos ou outras informações do Centro Fashion. Encaminhei a conversa para a Marilisy, que dará continuidade por aqui.'
