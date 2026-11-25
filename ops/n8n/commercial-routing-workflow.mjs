@@ -7,10 +7,8 @@ if (inboxId !== 10) return [];
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
 if (!conversationId) return [];
 const existingLabels = (payload.conversation?.labels || [])
-  .map(label => typeof label === 'string' ? label : label?.title)
-  .filter(Boolean);
-const isIncomingMessage = event === 'message_created' &&
-  String(payload.message_type).toLowerCase() === 'incoming';
+  .map(label => typeof label === 'string' ? label : label?.title).filter(Boolean);
+const isIncomingMessage = event === 'message_created' && String(payload.message_type).toLowerCase() === 'incoming';
 const conversationStatus = String(payload.conversation?.status || payload.status || '').toLowerCase();
 const isResolvedConversation = event === 'conversation_status_changed' && conversationStatus === 'resolved';
 if (!isIncomingMessage && !isResolvedConversation) return [];
@@ -32,13 +30,11 @@ function request(path, body) {
   });
 }
 const base = '/api/v1/accounts/1/conversations/' + conversationId;
-
+const routingPrefixes = ['triagem-', 'setor-', 'assunto-'];
+const isRoutingLabel = label => label === 'enviar-kanban' || routingPrefixes.some(prefix => label.startsWith(prefix));
 if (isResolvedConversation) {
-  const routingLabels = new Set(['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada']);
-  const remainingLabels = existingLabels.filter(label => !routingLabels.has(label));
-  if (remainingLabels.length !== existingLabels.length) {
-    await request(base + '/labels', { labels: remainingLabels });
-  }
+  const remainingLabels = existingLabels.filter(label => !isRoutingLabel(label));
+  if (remainingLabels.length !== existingLabels.length) await request(base + '/labels', { labels: remainingLabels });
   return [{ json: { conversationId, route: 'reset' } }];
 }
 
@@ -47,55 +43,140 @@ if (!raw) return [];
 const customerText = raw.split(/\n{3,}\*\*/)[0].trim();
 const normalize = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 const text = normalize(customerText);
-const consumer = /\b(onde vende|onde encontro|procuro|comprar roupa|comprar produto|vestido|calcado|tenis|bolsa|moda infantil|moda feminina|moda masculina|qual loja|loja que vende|categoria de loja)\b/.test(text);
-const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|ser lojista|empreender|abrir (uma )?loja|montar (uma )?loja|comprar (uma )?(loja|box|quiosque|ponto|espaco)|compra (de )?(loja|box|quiosque|ponto|espaco)|quero (uma )?(loja|box|quiosque)|valor(es)? (do |de |para )?(aluguel|box|loja|quiosque|espaco)|tamanho(s)? (de |do )?(box|loja|quiosque|espaco)|box disponivel|loja disponivel|espaco disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
-const assisted = text === '2' || text === '3' || consumer;
-const route = commercial && !consumer ? 'commercial' : assisted ? 'assistant' : 'menu';
-const hasRoutingState = existingLabels.some(label =>
-  ['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada'].includes(label)
-);
-const toMillis = value => {
-  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
-  const parsed = Date.parse(String(value || ''));
-  return Number.isFinite(parsed) ? parsed : 0;
+const numericChoice = (text.match(/^\s*(\d{1,2})\s*[.)-]?\s*$/) || [])[1] || '';
+const labels = new Set(existingLabels);
+const addLabels = async (...newLabels) => {
+  newLabels.filter(Boolean).forEach(label => labels.add(label));
+  await request(base + '/labels', { labels: [...labels] });
 };
-const conversationCreatedAt = toMillis(payload.conversation?.created_at);
-const messageCreatedAt = toMillis(payload.created_at);
-const currentAssigneeId = Number(
-  payload.conversation?.meta?.assignee?.id || payload.conversation?.assignee?.id || 0
-);
-const commercialTeamIds = [9, 10, 11, 12, 13, 14];
+const assignAgent = assigneeId => request(base + '/assignments', { team_id: 2, assignee_id: assigneeId });
+const assignTeam = teamId => request(base + '/assignments', { team_id: teamId });
+const send = content => request(base + '/messages', { content, message_type: 'outgoing', private: false });
 
-// Preserve existing operational conversations that predate this routing tree.
-if (!hasRoutingState && commercialTeamIds.includes(currentAssigneeId) &&
-    conversationCreatedAt && messageCreatedAt &&
-    messageCreatedAt - conversationCreatedAt > 30 * 60 * 1000) return [];
-if (existingLabels.includes('enviar-kanban')) return [];
-if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
-if (existingLabels.includes('triagem-menu-enviada') && route === 'menu') return [];
+const mainMenu = 'Olá! 👋 Seja bem-vindo(a) ao atendimento do Centro Fashion Fortaleza.\n\n' +
+  'Para direcionarmos sua solicitação ao setor responsável, escolha uma opção:\n\n' +
+  '1️⃣ Quero comprar ou alugar um espaço\n' +
+  '2️⃣ Já sou lojista e preciso de atendimento\n' +
+  '3️⃣ Procuro uma loja, produto ou categoria\n' +
+  '4️⃣ Marketing, divulgação e ações no empreendimento\n' +
+  '5️⃣ Hotel Centro Fashion\n' +
+  '6️⃣ Outros assuntos\n\nDigite apenas o número da opção desejada.';
+const tenantMenu = 'Certo! Qual assunto você deseja resolver?\n\n' +
+  '1️⃣ Contratos\n2️⃣ Financeiro, boletos de CDU ou manutenção\n3️⃣ Renegociação financeira\n' +
+  '4️⃣ Troca de titularidade ou migração\n5️⃣ Repasse ou pós-venda\n6️⃣ Distrato\n' +
+  '7️⃣ CEOP e autorizações operacionais\n8️⃣ Outro assunto relacionado à loja\n\nDigite apenas o número da opção desejada.';
+const catalogMenu = 'O que você procura?\n\n' +
+  '1️⃣ Encontrar uma loja\n2️⃣ Encontrar um produto\n3️⃣ Encontrar uma categoria ou segmento\n' +
+  '4️⃣ Consultar o catálogo de lojas\n5️⃣ Horários e localização\n\nDigite apenas o número da opção desejada.';
+const marketingMenu = 'Qual assunto de Marketing você deseja tratar?\n\n' +
+  '1️⃣ Mídia paga e exposição de marca\n2️⃣ Divulgação e campanhas\n3️⃣ Autorização para ações promocionais\n' +
+  '4️⃣ Divulgação de inauguração\n5️⃣ Parcerias e eventos\n6️⃣ Relacionamento com lojistas\n' +
+  '7️⃣ Outro assunto de Marketing\n\nDigite apenas o número da opção desejada.';
 
-let reply;
-if (route === 'commercial') {
-  await request(base + '/labels', { labels: [...new Set([...existingLabels, 'enviar-kanban'])] });
-  const brokers = [9, 10, 11, 12, 13];
-  await request(base + '/assignments', { assignee_id: brokers[conversationId % brokers.length] });
-  reply = 'Identificamos seu interesse em ter um espaço no Centro Fashion. 🏪\n\nPara agilizar o atendimento, informe o tipo de espaço desejado (loja, box ou quiosque), seu segmento e o tamanho aproximado. Um corretor dará continuidade por aqui.';
-} else {
-  const routingLabel = route === 'assistant' ? 'triagem-marilisy' : 'triagem-menu-enviada';
-  await request(base + '/labels', { labels: [...new Set([...existingLabels, routingLabel])] });
-  await request(base + '/assignments', { assignee_id: 14 });
-  reply = route === 'assistant'
-    ? 'Entendi! Sua solicitação é sobre lojas, produtos ou outras informações do Centro Fashion. Encaminhei a conversa para a Marilisy, que dará continuidade por aqui.'
-    : 'Olá! Para direcionarmos corretamente, responda com uma opção:\n\n1️⃣ Quero alugar ou adquirir loja, box, quiosque ou outro espaço\n2️⃣ Procuro uma loja, produto ou categoria de moda\n3️⃣ Outros assuntos';
+const hasTerminalRoute = existingLabels.some(label => label === 'enviar-kanban' || label.startsWith('setor-') || label.startsWith('assunto-'));
+if (hasTerminalRoute) return [];
+const state = existingLabels.includes('triagem-lojista') ? 'tenant' :
+  existingLabels.includes('triagem-catalogo') ? 'catalog' :
+  existingLabels.includes('triagem-marketing') ? 'marketing' :
+  existingLabels.includes('triagem-menu-principal') ? 'main' : 'new';
+
+if (state === 'new') {
+  await addLabels('triagem-menu-principal');
+  await assignAgent(14);
+  await send(mainMenu);
+  return [{ json: { conversationId, route: 'main-menu' } }];
 }
-await request(base + '/messages', { content: reply, message_type: 'outgoing', private: false });
-return [{ json: { conversationId, route } }];
+
+if (state === 'main') {
+  if (numericChoice === '1') {
+    await addLabels('enviar-kanban', 'setor-novos-negocios');
+    const brokers = [9, 10, 11, 12, 13];
+    await request(base + '/assignments', { team_id: 2, assignee_id: brokers[conversationId % brokers.length] });
+    await send('Ótimo! Você tem interesse em qual tipo de espaço?\n\n' +
+      '1️⃣ Loja\n2️⃣ Box\n3️⃣ Quiosque\n4️⃣ Espaço para ação ou exposição\n5️⃣ Ainda não sei qual espaço preciso\n\n' +
+      'Para agilizar, informe também seu nome, o nome da empresa ou loja, se houver, e seu segmento de atuação. Um corretor dará continuidade por aqui.');
+    return [{ json: { conversationId, route: 'new-business' } }];
+  }
+  if (numericChoice === '2') {
+    await addLabels('triagem-lojista'); await assignAgent(14); await send(tenantMenu);
+    return [{ json: { conversationId, route: 'tenant-menu' } }];
+  }
+  if (numericChoice === '3') {
+    await addLabels('triagem-catalogo'); await assignAgent(14); await send(catalogMenu);
+    return [{ json: { conversationId, route: 'catalog-menu' } }];
+  }
+  if (numericChoice === '4') {
+    await addLabels('triagem-marketing'); await assignTeam(1); await send(marketingMenu);
+    return [{ json: { conversationId, route: 'marketing-menu' } }];
+  }
+  if (numericChoice === '5') {
+    await addLabels('setor-hotel'); await assignTeam(3);
+    await send('Você será direcionado ao atendimento do Hotel Centro Fashion. 🏨\n\nPara agilizar, informe seu nome, a data prevista de entrada e a quantidade de hóspedes. A equipe do Hotel dará continuidade por aqui.');
+    return [{ json: { conversationId, route: 'hotel' } }];
+  }
+  if (numericChoice === '6') {
+    await addLabels('setor-outros-assuntos'); await assignAgent(14);
+    await send('Certo! Descreva resumidamente como podemos ajudar. Nossa equipe fará a triagem e encaminhará sua solicitação ao setor responsável.');
+    return [{ json: { conversationId, route: 'other' } }];
+  }
+  await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 6.\n\n' + mainMenu);
+  return [{ json: { conversationId, route: 'invalid-main-option' } }];
+}
+
+if (state === 'tenant') {
+  const routes = {
+    '1': ['setor-contratos', 'Contratos'], '2': ['setor-financeiro', 'Financeiro, boletos de CDU ou manutenção'],
+    '3': ['setor-renegociacao', 'Renegociação financeira'], '4': ['setor-titularidade-migracao', 'Troca de titularidade ou migração'],
+    '5': ['setor-repasse-pos-venda', 'Repasse ou pós-venda'], '6': ['setor-distrato', 'Distrato'],
+    '7': ['setor-ceop', 'CEOP e autorizações operacionais'], '8': ['setor-lojista-outros', 'Outro assunto relacionado à loja']
+  };
+  const selected = routes[numericChoice];
+  if (!selected) {
+    await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 8.\n\n' + tenantMenu);
+    return [{ json: { conversationId, route: 'invalid-tenant-option' } }];
+  }
+  await addLabels(selected[0]); await assignAgent(14);
+  await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi registrada.\n\nInforme seu nome, o nome da loja e o número do box ou loja, se souber. A equipe comercial fará o encaminhamento ao setor responsável.');
+  return [{ json: { conversationId, route: selected[0] } }];
+}
+
+if (state === 'catalog') {
+  const routes = {
+    '1': ['assunto-encontrar-loja', 'encontrar uma loja'], '2': ['assunto-encontrar-produto', 'encontrar um produto'],
+    '3': ['assunto-categoria-segmento', 'encontrar uma categoria ou segmento'], '4': ['assunto-catalogo-lojas', 'consultar o catálogo de lojas'],
+    '5': ['assunto-horarios-localizacao', 'horários e localização']
+  };
+  const selected = routes[numericChoice];
+  if (!selected) {
+    await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 5.\n\n' + catalogMenu);
+    return [{ json: { conversationId, route: 'invalid-catalog-option' } }];
+  }
+  await addLabels(selected[0]); await assignAgent(14);
+  await send('Certo! Você deseja ' + selected[1] + '. Descreva o que procura e nossa equipe de relacionamento dará continuidade por aqui.');
+  return [{ json: { conversationId, route: selected[0] } }];
+}
+
+if (state === 'marketing') {
+  const routes = {
+    '1': ['assunto-midia-paga', 'mídia paga e exposição de marca'], '2': ['assunto-divulgacao-campanhas', 'divulgação e campanhas'],
+    '3': ['assunto-acoes-promocionais', 'autorização para ações promocionais'], '4': ['assunto-inauguracao', 'divulgação de inauguração'],
+    '5': ['assunto-parcerias-eventos', 'parcerias e eventos'], '6': ['assunto-relacionamento-lojistas', 'relacionamento com lojistas'],
+    '7': ['assunto-marketing-outros', 'outro assunto de Marketing']
+  };
+  const selected = routes[numericChoice];
+  if (!selected) {
+    await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 7.\n\n' + marketingMenu);
+    return [{ json: { conversationId, route: 'invalid-marketing-option' } }];
+  }
+  await addLabels(selected[0]); await assignTeam(1);
+  await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi encaminhada à equipe de Marketing. Descreva os detalhes para continuarmos o atendimento.');
+  return [{ json: { conversationId, route: selected[0] } }];
+}
+return [];
 `;
 
 const workflow = [{
-  id: 'cfCommercialRouting001',
-  name: 'Centro Fashion - Triagem WhatsApp Comercial',
-  active: false,
+  id: 'cfCommercialRouting001', name: 'Centro Fashion - Triagem WhatsApp Comercial', active: true,
   nodes: [
     { id: 'commercial-webhook', name: 'Webhook Chatwoot Comercial', type: 'n8n-nodes-base.webhook', typeVersion: 2.1,
       webhookId: 'ea879f3d-9346-4fb5-a68e-42d89a5bea49', position: [0, 0],
@@ -106,5 +187,4 @@ const workflow = [{
   connections: { 'Webhook Chatwoot Comercial': { main: [[{ node: 'Classificar e Rotear', type: 'main', index: 0 }]] } },
   settings: { executionOrder: 'v1' }, pinData: {}, tags: []
 }];
-
 process.stdout.write(JSON.stringify(workflow, null, 2));
