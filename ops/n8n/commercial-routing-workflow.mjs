@@ -12,7 +12,7 @@ const customerText = raw.split(/\n{3,}\*\*/)[0].trim();
 const normalize = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 const text = normalize(customerText);
 const consumer = /\b(onde vende|onde encontro|procuro|comprar roupa|comprar produto|vestido|calcado|tenis|bolsa|moda infantil|moda feminina|moda masculina|qual loja|loja que vende|categoria de loja)\b/.test(text);
-const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|abrir (uma )?loja|montar (uma )?loja|quero (uma )?(loja|box|quiosque)|valor (do |de )?(aluguel|box|loja|quiosque)|tamanho(s)? (de |do )?(box|loja|quiosque)|box disponivel|loja disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
+const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|ser lojista|empreender|abrir (uma )?loja|montar (uma )?loja|comprar (uma )?(loja|box|quiosque|ponto|espaco)|compra (de )?(loja|box|quiosque|ponto|espaco)|quero (uma )?(loja|box|quiosque)|valor(es)? (do |de |para )?(aluguel|box|loja|quiosque|espaco)|tamanho(s)? (de |do )?(box|loja|quiosque|espaco)|box disponivel|loja disponivel|espaco disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
 const assisted = text === '2' || text === '3' || consumer;
 const route = commercial && !consumer ? 'commercial' : assisted ? 'assistant' : 'menu';
 
