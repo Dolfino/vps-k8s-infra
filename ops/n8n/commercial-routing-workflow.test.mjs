@@ -49,6 +49,7 @@ function payload(content, labels = [], overrides = {}) {
   assert.equal(result[0].json.route, 'main-menu');
   assert.ok(calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('triagem-menu-principal')));
   assert.ok(calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('1️⃣ Quero comprar ou alugar')));
+  assert.ok(calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('digite 0 ou MENU')));
 }
 
 {

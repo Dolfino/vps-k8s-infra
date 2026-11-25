@@ -65,7 +65,8 @@ const mainMenu = 'Olá! 👋 Seja bem-vindo(a) ao atendimento do Centro Fashion 
   '3️⃣ Procuro uma loja, produto ou categoria\n' +
   '4️⃣ Marketing, divulgação e ações no empreendimento\n' +
   '5️⃣ Hotel Centro Fashion\n' +
-  '6️⃣ Outros assuntos\n\nDigite apenas o número da opção desejada.';
+  '6️⃣ Outros assuntos\n\nDigite apenas o número da opção desejada.\n\n' +
+  'A qualquer momento, digite 0 ou MENU para escolher outro assunto.';
 const tenantMenu = 'Certo! Qual assunto você deseja resolver?\n\n' +
   '1️⃣ Contratos\n2️⃣ Financeiro, boletos de CDU ou manutenção\n3️⃣ Renegociação financeira\n' +
   '4️⃣ Troca de titularidade ou migração\n5️⃣ Repasse ou pós-venda\n6️⃣ Distrato\n' +
