@@ -34,7 +34,10 @@ function request(path, body) {
 const base = '/api/v1/accounts/1/conversations/' + conversationId;
 let reply;
 if (route === 'commercial') {
-  await request(base + '/labels', { labels: [...new Set([...(payload.conversation?.labels || []), 'enviar-kanban'])] });
+  const existingLabels = (payload.conversation?.labels || [])
+    .map(label => typeof label === 'string' ? label : label?.title)
+    .filter(Boolean);
+  await request(base + '/labels', { labels: [...new Set([...existingLabels, 'enviar-kanban'])] });
   const brokers = [9, 10, 11, 12, 13];
   await request(base + '/assignments', { assignee_id: brokers[conversationId % brokers.length] });
   reply = 'Identificamos seu interesse em ter um espaço no Centro Fashion. 🏪\n\nPara agilizar o atendimento, informe o tipo de espaço desejado (loja, box ou quiosque), seu segmento e o tamanho aproximado. Um corretor dará continuidade por aqui.';
@@ -54,7 +57,8 @@ const workflow = [{
   active: false,
   nodes: [
     { id: 'commercial-webhook', name: 'Webhook Chatwoot Comercial', type: 'n8n-nodes-base.webhook', typeVersion: 2.1,
-      position: [0, 0], parameters: { httpMethod: 'POST', path: 'chatwoot-comercial-routing', options: {} } },
+      webhookId: 'ea879f3d-9346-4fb5-a68e-42d89a5bea49', position: [0, 0],
+      parameters: { httpMethod: 'POST', path: 'chatwoot-comercial-routing', options: {} } },
     { id: 'commercial-router', name: 'Classificar e Rotear', type: 'n8n-nodes-base.code', typeVersion: 2,
       position: [260, 0], parameters: { jsCode: routingCode } }
   ],
