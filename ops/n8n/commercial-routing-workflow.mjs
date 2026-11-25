@@ -1,43 +1,19 @@
 const routingCode = String.raw`
 const payload = $json.body || $json;
-if (payload.event !== 'message_created') return [];
-if (String(payload.message_type).toLowerCase() !== 'incoming') return [];
+const event = String(payload.event || '');
 const inboxId = Number(payload.inbox?.id || payload.conversation?.inbox_id || 0);
 if (inboxId !== 10) return [];
 
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
-const raw = String(payload.content || '').trim();
-if (!conversationId || !raw) return [];
-const customerText = raw.split(/\n{3,}\*\*/)[0].trim();
-const normalize = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-const text = normalize(customerText);
-const consumer = /\b(onde vende|onde encontro|procuro|comprar roupa|comprar produto|vestido|calcado|tenis|bolsa|moda infantil|moda feminina|moda masculina|qual loja|loja que vende|categoria de loja)\b/.test(text);
-const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|ser lojista|empreender|abrir (uma )?loja|montar (uma )?loja|comprar (uma )?(loja|box|quiosque|ponto|espaco)|compra (de )?(loja|box|quiosque|ponto|espaco)|quero (uma )?(loja|box|quiosque)|valor(es)? (do |de |para )?(aluguel|box|loja|quiosque|espaco)|tamanho(s)? (de |do )?(box|loja|quiosque|espaco)|box disponivel|loja disponivel|espaco disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
-const assisted = text === '2' || text === '3' || consumer;
-const route = commercial && !consumer ? 'commercial' : assisted ? 'assistant' : 'menu';
+if (!conversationId) return [];
 const existingLabels = (payload.conversation?.labels || [])
   .map(label => typeof label === 'string' ? label : label?.title)
   .filter(Boolean);
-const hasRoutingState = existingLabels.some(label =>
-  ['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada'].includes(label)
-);
-const toMillis = value => {
-  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
-  const parsed = Date.parse(String(value || ''));
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-const conversationCreatedAt = toMillis(payload.conversation?.created_at);
-const messageCreatedAt = toMillis(payload.created_at);
-const currentAssigneeId = Number(
-  payload.conversation?.meta?.assignee?.id || payload.conversation?.assignee?.id || 0
-);
-
-// Preserve existing operational conversations that predate this routing tree.
-if (!hasRoutingState && currentAssigneeId && conversationCreatedAt && messageCreatedAt &&
-    messageCreatedAt - conversationCreatedAt > 30 * 60 * 1000) return [];
-if (existingLabels.includes('enviar-kanban')) return [];
-if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
-if (existingLabels.includes('triagem-menu-enviada') && route === 'menu') return [];
+const isIncomingMessage = event === 'message_created' &&
+  String(payload.message_type).toLowerCase() === 'incoming';
+const conversationStatus = String(payload.conversation?.status || payload.status || '').toLowerCase();
+const isResolvedConversation = event === 'conversation_status_changed' && conversationStatus === 'resolved';
+if (!isIncomingMessage && !isResolvedConversation) return [];
 
 const fs = require('fs');
 const token = fs.readFileSync('/run/secrets/chatwoot/token', 'utf8').trim();
@@ -56,6 +32,48 @@ function request(path, body) {
   });
 }
 const base = '/api/v1/accounts/1/conversations/' + conversationId;
+
+if (isResolvedConversation) {
+  const routingLabels = new Set(['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada']);
+  const remainingLabels = existingLabels.filter(label => !routingLabels.has(label));
+  if (remainingLabels.length !== existingLabels.length) {
+    await request(base + '/labels', { labels: remainingLabels });
+  }
+  return [{ json: { conversationId, route: 'reset' } }];
+}
+
+const raw = String(payload.content || '').trim();
+if (!raw) return [];
+const customerText = raw.split(/\n{3,}\*\*/)[0].trim();
+const normalize = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+const text = normalize(customerText);
+const consumer = /\b(onde vende|onde encontro|procuro|comprar roupa|comprar produto|vestido|calcado|tenis|bolsa|moda infantil|moda feminina|moda masculina|qual loja|loja que vende|categoria de loja)\b/.test(text);
+const commercial = text === '1' || /\b(alugar|aluguel|locacao|locar|adquirir|ser lojista|empreender|abrir (uma )?loja|montar (uma )?loja|comprar (uma )?(loja|box|quiosque|ponto|espaco)|compra (de )?(loja|box|quiosque|ponto|espaco)|quero (uma )?(loja|box|quiosque)|valor(es)? (do |de |para )?(aluguel|box|loja|quiosque|espaco)|tamanho(s)? (de |do )?(box|loja|quiosque|espaco)|box disponivel|loja disponivel|espaco disponivel|quiosque|ponto comercial|espaco comercial)\b/.test(text);
+const assisted = text === '2' || text === '3' || consumer;
+const route = commercial && !consumer ? 'commercial' : assisted ? 'assistant' : 'menu';
+const hasRoutingState = existingLabels.some(label =>
+  ['enviar-kanban', 'triagem-marilisy', 'triagem-menu-enviada'].includes(label)
+);
+const toMillis = value => {
+  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
+  const parsed = Date.parse(String(value || ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+const conversationCreatedAt = toMillis(payload.conversation?.created_at);
+const messageCreatedAt = toMillis(payload.created_at);
+const currentAssigneeId = Number(
+  payload.conversation?.meta?.assignee?.id || payload.conversation?.assignee?.id || 0
+);
+const commercialTeamIds = [9, 10, 11, 12, 13, 14];
+
+// Preserve existing operational conversations that predate this routing tree.
+if (!hasRoutingState && commercialTeamIds.includes(currentAssigneeId) &&
+    conversationCreatedAt && messageCreatedAt &&
+    messageCreatedAt - conversationCreatedAt > 30 * 60 * 1000) return [];
+if (existingLabels.includes('enviar-kanban')) return [];
+if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
+if (existingLabels.includes('triagem-menu-enviada') && route === 'menu') return [];
+
 let reply;
 if (route === 'commercial') {
   await request(base + '/labels', { labels: [...new Set([...existingLabels, 'enviar-kanban'])] });
