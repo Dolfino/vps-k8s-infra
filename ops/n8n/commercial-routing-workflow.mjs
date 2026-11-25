@@ -39,7 +39,8 @@ if (existingLabels.includes('enviar-kanban')) return [];
 if (existingLabels.includes('triagem-marilisy') && route !== 'commercial') return [];
 if (existingLabels.includes('triagem-menu-enviada') && route === 'menu') return [];
 
-const token = process.env.CHATWOOT_BOT_TOKEN;
+const fs = require('fs');
+const token = fs.readFileSync('/run/secrets/chatwoot/token', 'utf8').trim();
 if (!token) throw new Error('CHATWOOT_BOT_TOKEN unavailable');
 const http = require('http');
 function request(path, body) {

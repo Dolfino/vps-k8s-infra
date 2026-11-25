@@ -68,8 +68,7 @@ data:
             "N8N_VERSION",
             "ENVIRONMENT",
             "DEPLOYMENT_NAME",
-            "HOME",
-            "CHATWOOT_BOT_TOKEN"
+            "HOME"
           ],
           "env-overrides": {
             "NODE_FUNCTION_ALLOW_BUILTIN": "*",
@@ -189,11 +188,6 @@ spec:
               value: "268435456"
             - name: N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES
               value: "1000"
-            - name: CHATWOOT_BOT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: n8n-chatwoot-runtime
-                  key: CHATWOOT_BOT_TOKEN
           resources:
             requests:
               cpu: 100m
@@ -247,11 +241,6 @@ spec:
               value: "/usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules"
             - name: N8N_RUNNERS_TASK_TIMEOUT
               value: "60"
-            - name: CHATWOOT_BOT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: n8n-chatwoot-runtime
-                  key: CHATWOOT_BOT_TOKEN
           resources:
             requests:
               cpu: 100m
@@ -275,6 +264,9 @@ spec:
             - mountPath: /usr/local/lib/node_modules/n8n/node_modules/.pnpm/node_modules
               name: runner-modules
               readOnly: true
+            - mountPath: /run/secrets/chatwoot
+              name: chatwoot-token
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /healthz
@@ -294,6 +286,12 @@ spec:
         - name: runner-modules
           persistentVolumeClaim:
             claimName: n8n-runner-modules
+        - name: chatwoot-token
+          secret:
+            secretName: n8n-chatwoot-runtime
+            items:
+              - key: CHATWOOT_BOT_TOKEN
+                path: token
         - name: n8n-storage
           persistentVolumeClaim:
             claimName: n8n-data
