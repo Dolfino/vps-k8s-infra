@@ -40,12 +40,15 @@ Inbox 10 uses a two-level service tree:
   while preserving conversation history and any existing Kanban card;
 - current tenant requests receive subject labels and are initially assigned to
   the commercial support analyst for manual sector handoff;
-- tenant option 7 (`CEOP e autorizações operacionais`) is assigned directly to
-  Emily Viana Cunha (agent 7); incoming conversations from `WhatsApp - CF
-  Empreendedor` (inbox 6) are also labeled `setor-ceop` and assigned to Emily,
-  without displaying the commercial menu;
+- tenant option 7 (`CEOP e autorizações operacionais`) is assigned to the
+  `ceop - central de operações` team (team 5), whose members are David
+  Nascimento da Silva and David Silva;
 - store and product searches are assigned to commercial support;
 - marketing requests are assigned to the `marketing` team;
+- marketing option 6 (`Relacionamento com lojistas`) is assigned directly to
+  Emily Viana Cunha (agent 7); incoming conversations from `WhatsApp - CF
+  Empreendedor` (inbox 6) are also labeled `assunto-relacionamento-lojistas`
+  and assigned to Emily, without displaying the commercial menu;
 - hotel requests are assigned to the `hotel` team;
 - resolving a conversation removes routing labels so a future message starts a
   new service tree.

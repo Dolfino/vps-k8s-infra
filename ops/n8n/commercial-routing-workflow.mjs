@@ -88,7 +88,7 @@ if (isIncomingMessage && existingLabels.includes('recuperacao-ativa')) {
 }
 
 if (inboxId === 6) {
-  await addLabels('setor-ceop');
+  await addLabels('assunto-relacionamento-lojistas');
   await assignAgent(7);
   return [{ json: { conversationId, route: 'cf-empreendedor-emily', ownerId: 7 } }];
 }
@@ -371,14 +371,16 @@ if (state === 'tenant') {
     '1': ['setor-contratos', 'Contratos'], '2': ['setor-financeiro', 'Financeiro, boletos de CDU ou manutenção'],
     '3': ['setor-renegociacao', 'Renegociação financeira'], '4': ['setor-titularidade-migracao', 'Troca de titularidade ou migração'],
     '5': ['setor-repasse-pos-venda', 'Repasse ou pós-venda'], '6': ['setor-distrato', 'Distrato'],
-    '7': ['setor-ceop', 'CEOP e autorizações operacionais', 7], '8': ['setor-lojista-outros', 'Outro assunto relacionado à loja']
+    '7': ['setor-ceop', 'CEOP e autorizações operacionais'], '8': ['setor-lojista-outros', 'Outro assunto relacionado à loja']
   };
   const selected = routes[numericChoice];
   if (!selected) {
     await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 8.\n\n' + tenantMenu);
     return [{ json: { conversationId, route: 'invalid-tenant-option' } }];
   }
-  await completeLabels(selected[0]); await assignAgent(selected[2] || 14);
+  await completeLabels(selected[0]);
+  if (selected[0] === 'setor-ceop') await assignTeam(5);
+  else await assignAgent(14);
   await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi registrada.\n\nInforme seu nome, o nome da loja e o número do box ou loja, se souber. A equipe comercial fará o encaminhamento ao setor responsável.');
   return [{ json: { conversationId, route: selected[0] } }];
 }
@@ -403,7 +405,7 @@ if (state === 'marketing') {
   const routes = {
     '1': ['assunto-midia-paga', 'mídia paga e exposição de marca'], '2': ['assunto-divulgacao-campanhas', 'divulgação e campanhas'],
     '3': ['assunto-acoes-promocionais', 'autorização para ações promocionais'], '4': ['assunto-inauguracao', 'divulgação de inauguração'],
-    '5': ['assunto-parcerias-eventos', 'parcerias e eventos'], '6': ['assunto-relacionamento-lojistas', 'relacionamento com lojistas'],
+    '5': ['assunto-parcerias-eventos', 'parcerias e eventos'], '6': ['assunto-relacionamento-lojistas', 'relacionamento com lojistas', 7],
     '7': ['assunto-marketing-outros', 'outro assunto de Marketing']
   };
   const selected = routes[numericChoice];
@@ -411,7 +413,9 @@ if (state === 'marketing') {
     await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 7.\n\n' + marketingMenu);
     return [{ json: { conversationId, route: 'invalid-marketing-option' } }];
   }
-  await completeLabels(selected[0]); await assignTeam(1);
+  await completeLabels(selected[0]);
+  if (selected[2]) await assignAgent(selected[2]);
+  else await assignTeam(1);
   await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi encaminhada à equipe de Marketing. Descreva os detalhes para continuarmos o atendimento.');
   return [{ json: { conversationId, route: selected[0] } }];
 }
