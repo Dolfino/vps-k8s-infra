@@ -17,6 +17,12 @@ The commercial routing workflow is generated from
 `ops/n8n/commercial-routing-workflow.mjs` and published in n8n with the stable
 workflow ID `cfCommercialRouting001`.
 
+The workflow contains Portuguese accents and WhatsApp emoji. When publishing
+from Windows, do not pipe the generated JSON through PowerShell into SSH: that
+text pipeline can replace UTF-8 characters with `?`. Transfer the `.mjs` file
+without text conversion, render the JSON inside the Linux n8n container, import
+that file, and then publish the current workflow version.
+
 ## Commercial WhatsApp routing
 
 Inbox 10 uses a two-level service tree:
