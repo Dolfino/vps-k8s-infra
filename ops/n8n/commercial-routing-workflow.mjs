@@ -85,15 +85,17 @@ const newBusinessMenu = 'Ótimo! Você tem interesse em qual tipo de espaço?\n\
 const newBusinessRoutes = {
   '1': ['assunto-espaco-loja', 'uma loja'],
   '2': ['assunto-espaco-box', 'um box'],
-  '3': ['assunto-espaco-quiosque', 'um quiosque'],
-  '4': ['assunto-espaco-acao-exposicao', 'um espaço para ação ou exposição'],
+  '3': ['assunto-espaco-quiosque', 'um quiosque', 20],
+  '4': ['assunto-espaco-acao-exposicao', 'um espaço para ação ou exposição', 20],
   '5': ['assunto-espaco-indefinido', 'ajuda para definir o espaço ideal']
 };
 const brokers = [9, 10, 11, 12, 13];
 const finishNewBusiness = async selected => {
   await completeLabels(selected[0], 'enviar-kanban', 'setor-novos-negocios');
-  await request(base + '/assignments', { team_id: 2, assignee_id: brokers[conversationId % brokers.length] });
-  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já foi encaminhada a um corretor, que continuará por aqui.');
+  const assigneeId = selected[2] || brokers[conversationId % brokers.length];
+  await assignAgent(assigneeId);
+  const responsible = selected[2] ? 'à especialista responsável' : 'a um corretor';
+  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já foi encaminhada ' + responsible + ', que continuará por aqui.');
 };
 
 const menuCommand = /^(0|menu|novo assunto|outro assunto)$/.test(text);
@@ -116,7 +118,9 @@ if (hasNewBusinessRoute && !hasSpaceSubtype) {
     return [{ json: { conversationId, route: 'invalid-new-business-option' } }];
   }
   await addLabels(selected[0]);
-  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já está com um corretor, que continuará por aqui.');
+  if (selected[2]) await assignAgent(selected[2]);
+  const responsible = selected[2] ? 'com a especialista responsável' : 'com um corretor';
+  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já está ' + responsible + ', que continuará por aqui.');
   return [{ json: { conversationId, route: selected[0], compatibility: true } }];
 }
 const greeting = /^(ola|oi|bom dia|boa tarde|boa noite)[!. ]*$/.test(text);

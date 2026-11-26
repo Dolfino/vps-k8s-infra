@@ -21,9 +21,11 @@ workflow ID `cfCommercialRouting001`.
 
 Inbox 10 uses a two-level service tree:
 
-- new business first asks for the desired space type; only after that answer is
-  it assigned to the five-broker rotation and receives the `enviar-kanban`
-  label, avoiding incomplete Kanban cards;
+- new business first asks for the desired space type; only after that answer
+  does it receive the `enviar-kanban` label, avoiding incomplete Kanban cards;
+- `Quiosque` and `Espaco para acao ou exposicao` are assigned exclusively to
+  Thalyta Carolyne Bernardo da Silva Marques (agent 20); store, box and an
+  undefined space remain in the five-broker rotation;
 - after the handoff, a new greeting receives one confirmation that a broker
   will continue the conversation; subsequent messages remain with the human;
 - `menu`, `novo assunto`, `outro assunto`, or `0` restarts the service tree

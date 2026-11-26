@@ -65,6 +65,15 @@ function payload(content, labels = [], overrides = {}) {
     && call.body.labels.includes('setor-novos-negocios') && call.body.labels.includes('assunto-espaco-box')));
   assert.ok(box.calls.some(call => call.path.endsWith('/assignments') && [9, 10, 11, 12, 13].includes(call.body.assignee_id)));
   assert.ok(box.calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('Você procura um box')));
+
+  const kiosk = await run(payload('3', ['triagem-menu-principal', 'triagem-novos-negocios']));
+  assert.equal(kiosk.result[0].json.route, 'assunto-espaco-quiosque');
+  assert.ok(kiosk.calls.some(call => call.path.endsWith('/assignments') && call.body.assignee_id === 20));
+  assert.ok(!kiosk.calls.some(call => call.path.endsWith('/assignments') && [9, 10, 11, 12, 13].includes(call.body.assignee_id)));
+
+  const actionSpace = await run(payload('4', ['triagem-menu-principal', 'triagem-novos-negocios']));
+  assert.equal(actionSpace.result[0].json.route, 'assunto-espaco-acao-exposicao');
+  assert.ok(actionSpace.calls.some(call => call.path.endsWith('/assignments') && call.body.assignee_id === 20));
 }
 
 {
@@ -73,6 +82,10 @@ function payload(content, labels = [], overrides = {}) {
   assert.equal(existing.result[0].json.compatibility, true);
   assert.ok(existing.calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('assunto-espaco-box')));
   assert.ok(!existing.calls.some(call => call.path.endsWith('/assignments')));
+
+  const existingKiosk = await run(payload('3', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios']));
+  assert.equal(existingKiosk.result[0].json.compatibility, true);
+  assert.ok(existingKiosk.calls.some(call => call.path.endsWith('/assignments') && call.body.assignee_id === 20));
 }
 
 {
