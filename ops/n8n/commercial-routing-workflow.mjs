@@ -30,7 +30,7 @@ function request(path, body) {
   });
 }
 const base = '/api/v1/accounts/1/conversations/' + conversationId;
-const routingPrefixes = ['triagem-', 'setor-', 'assunto-'];
+const routingPrefixes = ['triagem-', 'setor-', 'assunto-', 'qual-', 'qualificacao-', 'lead-'];
 const isRoutingLabel = label => label === 'enviar-kanban' || routingPrefixes.some(prefix => label.startsWith(prefix));
 if (isResolvedConversation) {
   const remainingLabels = existingLabels.filter(label => !isRoutingLabel(label));
@@ -52,6 +52,16 @@ const addLabels = async (...newLabels) => {
 const completeLabels = async (...newLabels) => {
   newLabels.filter(Boolean).forEach(label => labels.add(label));
   labels.delete('triagem-novo-assunto');
+  await request(base + '/labels', { labels: [...labels] });
+};
+const qualificationSteps = [
+  'triagem-qual-modalidade', 'triagem-qual-orcamento', 'triagem-qual-orcamento-livre',
+  'triagem-qual-prazo', 'triagem-qual-decisao', 'triagem-qual-negocio', 'triagem-qual-dados'
+];
+const setQualificationStep = async (nextStep, ...answerLabels) => {
+  qualificationSteps.forEach(label => labels.delete(label));
+  answerLabels.filter(Boolean).forEach(label => labels.add(label));
+  if (nextStep) labels.add(nextStep);
   await request(base + '/labels', { labels: [...labels] });
 };
 const assignAgent = assigneeId => request(base + '/assignments', { team_id: 2, assignee_id: assigneeId });
@@ -89,13 +99,69 @@ const newBusinessRoutes = {
   '4': ['assunto-espaco-acao-exposicao', 'um espaço para ação ou exposição', 20],
   '5': ['assunto-espaco-indefinido', 'ajuda para definir o espaço ideal']
 };
+const modalityMenu = 'Para entendermos a melhor condição, qual modalidade você procura?\n\n' +
+  '1️⃣ Somente locação\n2️⃣ Aquisição do CDU\n3️⃣ Quero conhecer as duas possibilidades\n' +
+  '4️⃣ Ainda não sei\n\nDigite apenas o número da opção desejada.';
+const timelineMenu = 'Quando você pretende iniciar?\n\n' +
+  '1️⃣ Imediatamente\n2️⃣ Em até 30 dias\n3️⃣ Entre 1 e 3 meses\n' +
+  '4️⃣ Mais de 3 meses\n5️⃣ Estou apenas pesquisando\n\nDigite apenas o número da opção desejada.';
+const decisionMenu = 'Qual é sua participação na decisão?\n\n' +
+  '1️⃣ Sou responsável pela decisão\n2️⃣ Decido com outra pessoa\n' +
+  '3️⃣ Estou pesquisando para outra pessoa\n\nDigite apenas o número da opção desejada.';
+const businessMenu = 'Em qual situação seu negócio está?\n\n' +
+  '1️⃣ Já possuo loja ou empresa funcionando\n2️⃣ Estou iniciando um novo negócio\n' +
+  '3️⃣ Ainda estou planejando\n\nDigite apenas o número da opção desejada.';
+const cduBudgetMenu = 'Qual faixa de valor você considera disponível para o sinal do CDU?\n\n' +
+  '1️⃣ Até R$ 5 mil\n2️⃣ De R$ 5 mil a R$ 10 mil\n3️⃣ De R$ 10 mil a R$ 20 mil\n' +
+  '4️⃣ De R$ 20 mil a R$ 40 mil\n5️⃣ Acima de R$ 40 mil\n6️⃣ Preciso conhecer as condições\n\n' +
+  'O valor semanal é cumulativo ao CDU e às parcelas. Digite apenas o número da opção.';
+const rentalBudgetMenus = {
+  'assunto-espaco-box': 'Qual faixa de investimento semanal você considera para o Box?\n\n1️⃣ Até R$ 300\n2️⃣ De R$ 301 a R$ 600\n3️⃣ De R$ 601 a R$ 900\n4️⃣ De R$ 901 a R$ 1.200\n5️⃣ Preciso analisar\n\nDigite apenas o número da opção.',
+  'assunto-espaco-loja': 'Qual faixa de investimento semanal você considera para a Loja?\n\n1️⃣ Até R$ 400\n2️⃣ De R$ 401 a R$ 700\n3️⃣ De R$ 701 a R$ 1.200\n4️⃣ De R$ 1.201 a R$ 2.000\n5️⃣ De R$ 2.001 a R$ 3.500\n6️⃣ Acima de R$ 3.500 ou preciso analisar\n\nDigite apenas o número da opção.',
+  'assunto-espaco-quiosque': 'Qual faixa de investimento semanal você considera para o Quiosque?\n\n1️⃣ Até R$ 399\n2️⃣ De R$ 400 a R$ 500\n3️⃣ De R$ 501 a R$ 600\n4️⃣ Acima de R$ 600\n5️⃣ Preciso analisar\n\nDigite apenas o número da opção.',
+  'assunto-espaco-indefinido': 'Qual faixa de investimento semanal você considera?\n\n1️⃣ Até R$ 300\n2️⃣ De R$ 301 a R$ 700\n3️⃣ De R$ 701 a R$ 1.200\n4️⃣ De R$ 1.201 a R$ 2.000\n5️⃣ Acima de R$ 2.000\n6️⃣ Preciso analisar\n\nDigite apenas o número da opção.'
+};
+const currentSpace = () => [...labels].find(label => label.startsWith('assunto-espaco-')) || '';
+const currentModality = () => [...labels].find(label => label.startsWith('qual-modalidade-')) || '';
+const budgetAssessment = (space, modality, choice) => {
+  const lastChoice = (modality === 'qual-modalidade-locacao' && ['assunto-espaco-box', 'assunto-espaco-quiosque'].includes(space)) ? '5' : '6';
+  if (choice === lastChoice) return 'qual-orcamento-validar';
+  if (modality !== 'qual-modalidade-locacao' && choice === '1' && ['assunto-espaco-loja', 'assunto-espaco-quiosque'].includes(space)) return 'qual-orcamento-incompativel';
+  if (modality === 'qual-modalidade-locacao' && choice === '1' && ['assunto-espaco-loja', 'assunto-espaco-quiosque'].includes(space)) return 'qual-orcamento-incompativel';
+  return 'qual-orcamento-compativel';
+};
+const qualificationScore = () => {
+  let score = labels.has('qual-orcamento-compativel') ? 25 : labels.has('qual-orcamento-validar') ? 5 : 0;
+  if (labels.has('qual-prazo-imediato') || labels.has('qual-prazo-30d')) score += 25;
+  else if (labels.has('qual-prazo-1a3m')) score += 15;
+  else if (labels.has('qual-prazo-mais3m')) score += 5;
+  if (labels.has('qual-decisao-responsavel')) score += 15;
+  else if (labels.has('qual-decisao-conjunta')) score += 10;
+  if (labels.has('qual-negocio-ativo')) score += 15;
+  else if (labels.has('qual-negocio-iniciando')) score += 10;
+  else if (labels.has('qual-negocio-planejando')) score += 5;
+  if (labels.has('qual-dados-informados')) score += 10;
+  return score;
+};
+const finishQualification = async () => {
+  labels.add('qual-dados-informados');
+  qualificationSteps.forEach(label => labels.delete(label));
+  labels.delete('qualificacao-incompleta');
+  ['lead-quente', 'lead-morno', 'lead-frio'].forEach(label => labels.delete(label));
+  const score = qualificationScore();
+  const temperature = score >= 70 ? 'lead-quente' : score >= 40 ? 'lead-morno' : 'lead-frio';
+  labels.add('qualificacao-concluida');
+  labels.add(temperature);
+  await request(base + '/labels', { labels: [...labels] });
+  await send('Obrigado! Sua qualificação foi concluída e as informações foram encaminhadas ao responsável. O atendimento continuará por aqui.\n\nA qualquer momento, digite 0 ou MENU para tratar de outro assunto.');
+  return { score, temperature };
+};
 const brokers = [9, 10, 11, 12, 13];
 const finishNewBusiness = async selected => {
-  await completeLabels(selected[0], 'enviar-kanban', 'setor-novos-negocios');
+  await completeLabels(selected[0], 'enviar-kanban', 'setor-novos-negocios', 'qualificacao-incompleta', 'triagem-qual-modalidade');
   const assigneeId = selected[2] || brokers[conversationId % brokers.length];
   await assignAgent(assigneeId);
-  const responsible = selected[2] ? 'à especialista responsável' : 'a um corretor';
-  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já foi encaminhada ' + responsible + ', que continuará por aqui.');
+  await send('Perfeito! Você procura ' + selected[1] + '. Sua solicitação já foi encaminhada ao responsável.\n\n' + modalityMenu);
 };
 
 const menuCommand = /^(0|menu|novo assunto|outro assunto)$/.test(text);
@@ -108,6 +174,96 @@ if (menuCommand) {
   return [{ json: { conversationId, route: 'new-subject-menu' } }];
 }
 
+const qualificationStep = qualificationSteps.find(label => existingLabels.includes(label));
+if (qualificationStep === 'triagem-qual-modalidade') {
+  const routes = {
+    '1': 'qual-modalidade-locacao', '2': 'qual-modalidade-cdu',
+    '3': 'qual-modalidade-ambas', '4': 'qual-modalidade-indefinida'
+  };
+  const modality = routes[numericChoice];
+  if (!modality) {
+    await send('Não consegui identificar essa opção.\n\n' + modalityMenu);
+    return [{ json: { conversationId, route: 'invalid-qualification-modality' } }];
+  }
+  const space = currentSpace();
+  if (modality === 'qual-modalidade-indefinida') {
+    await setQualificationStep('triagem-qual-prazo', modality, 'qual-orcamento-validar');
+    await send(timelineMenu);
+    return [{ json: { conversationId, route: modality } }];
+  }
+  if (space === 'assunto-espaco-acao-exposicao') {
+    await setQualificationStep('triagem-qual-orcamento-livre', modality);
+    await send('Qual é o orçamento estimado para a ação ou exposição? Você pode informar um valor aproximado ou responder “a definir”.');
+    return [{ json: { conversationId, route: modality } }];
+  }
+  await setQualificationStep('triagem-qual-orcamento', modality);
+  await send(modality === 'qual-modalidade-locacao' ? (rentalBudgetMenus[space] || rentalBudgetMenus['assunto-espaco-indefinido']) : cduBudgetMenu);
+  return [{ json: { conversationId, route: modality } }];
+}
+
+if (qualificationStep === 'triagem-qual-orcamento-livre') {
+  await setQualificationStep('triagem-qual-prazo', 'qual-orcamento-validar');
+  await send(timelineMenu);
+  return [{ json: { conversationId, route: 'qualification-free-budget' } }];
+}
+
+if (qualificationStep === 'triagem-qual-orcamento') {
+  const space = currentSpace();
+  const modality = currentModality();
+  const maxChoice = modality === 'qual-modalidade-locacao'
+    ? (['assunto-espaco-box', 'assunto-espaco-quiosque'].includes(space) ? 5 : 6)
+    : 6;
+  const choice = Number(numericChoice);
+  if (!choice || choice > maxChoice) {
+    await send('Não consegui identificar essa opção.\n\n' + (modality === 'qual-modalidade-locacao' ? (rentalBudgetMenus[space] || rentalBudgetMenus['assunto-espaco-indefinido']) : cduBudgetMenu));
+    return [{ json: { conversationId, route: 'invalid-qualification-budget' } }];
+  }
+  await setQualificationStep('triagem-qual-prazo', budgetAssessment(space, modality, numericChoice));
+  await send(timelineMenu);
+  return [{ json: { conversationId, route: 'qualification-budget' } }];
+}
+
+if (qualificationStep === 'triagem-qual-prazo') {
+  const routes = {
+    '1': 'qual-prazo-imediato', '2': 'qual-prazo-30d', '3': 'qual-prazo-1a3m',
+    '4': 'qual-prazo-mais3m', '5': 'qual-prazo-pesquisa'
+  };
+  if (!routes[numericChoice]) {
+    await send('Não consegui identificar essa opção.\n\n' + timelineMenu);
+    return [{ json: { conversationId, route: 'invalid-qualification-timeline' } }];
+  }
+  await setQualificationStep('triagem-qual-decisao', routes[numericChoice]);
+  await send(decisionMenu);
+  return [{ json: { conversationId, route: routes[numericChoice] } }];
+}
+
+if (qualificationStep === 'triagem-qual-decisao') {
+  const routes = { '1': 'qual-decisao-responsavel', '2': 'qual-decisao-conjunta', '3': 'qual-decisao-terceiro' };
+  if (!routes[numericChoice]) {
+    await send('Não consegui identificar essa opção.\n\n' + decisionMenu);
+    return [{ json: { conversationId, route: 'invalid-qualification-decision' } }];
+  }
+  await setQualificationStep('triagem-qual-negocio', routes[numericChoice]);
+  await send(businessMenu);
+  return [{ json: { conversationId, route: routes[numericChoice] } }];
+}
+
+if (qualificationStep === 'triagem-qual-negocio') {
+  const routes = { '1': 'qual-negocio-ativo', '2': 'qual-negocio-iniciando', '3': 'qual-negocio-planejando' };
+  if (!routes[numericChoice]) {
+    await send('Não consegui identificar essa opção.\n\n' + businessMenu);
+    return [{ json: { conversationId, route: 'invalid-qualification-business' } }];
+  }
+  await setQualificationStep('triagem-qual-dados', routes[numericChoice]);
+  await send('Para concluir, informe em uma única mensagem:\n\n• Seu nome\n• Nome da empresa ou loja, se houver\n• Segmento de atuação\n• Tamanho aproximado desejado');
+  return [{ json: { conversationId, route: routes[numericChoice] } }];
+}
+
+if (qualificationStep === 'triagem-qual-dados') {
+  const result = await finishQualification();
+  return [{ json: { conversationId, route: 'qualification-complete', ...result } }];
+}
+
 const hasTerminalRoute = existingLabels.some(label => label === 'enviar-kanban' || label.startsWith('setor-') || label.startsWith('assunto-'));
 const hasNewBusinessRoute = existingLabels.includes('enviar-kanban') && existingLabels.includes('setor-novos-negocios');
 const hasSpaceSubtype = existingLabels.some(label => label.startsWith('assunto-espaco-'));
@@ -117,10 +273,9 @@ if (hasNewBusinessRoute && !hasSpaceSubtype) {
     await send('Para concluir o encaminhamento, digite um número de 1 a 5.\n\n' + newBusinessMenu);
     return [{ json: { conversationId, route: 'invalid-new-business-option' } }];
   }
-  await addLabels(selected[0]);
+  await addLabels(selected[0], 'qualificacao-incompleta', 'triagem-qual-modalidade');
   if (selected[2]) await assignAgent(selected[2]);
-  const responsible = selected[2] ? 'com a especialista responsável' : 'com um corretor';
-  await send('Perfeito! Você procura ' + selected[1] + '.\n\nPara concluir, informe seu nome, o nome da empresa ou loja, seu segmento e o tamanho aproximado desejado. Sua solicitação já está ' + responsible + ', que continuará por aqui.');
+  await send('Perfeito! Você procura ' + selected[1] + '. Sua solicitação já está com o responsável.\n\n' + modalityMenu);
   return [{ json: { conversationId, route: selected[0], compatibility: true } }];
 }
 const greeting = /^(ola|oi|bom dia|boa tarde|boa noite)[!. ]*$/.test(text);

@@ -89,6 +89,73 @@ function payload(content, labels = [], overrides = {}) {
 }
 
 {
+  const base = ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios',
+    'assunto-espaco-box', 'qualificacao-incompleta'];
+  const modality = await run(payload('1', [...base, 'triagem-qual-modalidade']));
+  assert.equal(modality.result[0].json.route, 'qual-modalidade-locacao');
+  assert.ok(modality.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('qual-modalidade-locacao')
+    && call.body.labels.includes('triagem-qual-orcamento')));
+
+  const budget = await run(payload('2', [...base, 'qual-modalidade-locacao', 'triagem-qual-orcamento']));
+  assert.equal(budget.result[0].json.route, 'qualification-budget');
+  assert.ok(budget.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('qual-orcamento-compativel')
+    && call.body.labels.includes('triagem-qual-prazo')));
+
+  const timeline = await run(payload('1', [...base, 'qual-modalidade-locacao',
+    'qual-orcamento-compativel', 'triagem-qual-prazo']));
+  assert.equal(timeline.result[0].json.route, 'qual-prazo-imediato');
+
+  const decision = await run(payload('1', [...base, 'qual-modalidade-locacao',
+    'qual-orcamento-compativel', 'qual-prazo-imediato', 'triagem-qual-decisao']));
+  assert.equal(decision.result[0].json.route, 'qual-decisao-responsavel');
+
+  const business = await run(payload('1', [...base, 'qual-modalidade-locacao',
+    'qual-orcamento-compativel', 'qual-prazo-imediato', 'qual-decisao-responsavel',
+    'triagem-qual-negocio']));
+  assert.equal(business.result[0].json.route, 'qual-negocio-ativo');
+
+  const complete = await run(payload('Loja Teste, moda feminina, 4 m²', [...base,
+    'qual-modalidade-locacao', 'qual-orcamento-compativel', 'qual-prazo-imediato',
+    'qual-decisao-responsavel', 'qual-negocio-ativo', 'triagem-qual-dados']));
+  assert.equal(complete.result[0].json.route, 'qualification-complete');
+  assert.equal(complete.result[0].json.score, 90);
+  assert.equal(complete.result[0].json.temperature, 'lead-quente');
+  const finalLabels = complete.calls.find(call => call.path.endsWith('/labels')).body.labels;
+  assert.ok(finalLabels.includes('qualificacao-concluida'));
+  assert.ok(finalLabels.includes('lead-quente'));
+  assert.ok(!finalLabels.includes('qualificacao-incompleta'));
+}
+
+{
+  const cold = await run(payload('Ainda planejando', [
+    'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-loja',
+    'qualificacao-incompleta', 'qual-modalidade-cdu', 'qual-orcamento-incompativel',
+    'qual-prazo-pesquisa', 'qual-decisao-terceiro', 'qual-negocio-planejando',
+    'triagem-qual-dados'
+  ]));
+  assert.equal(cold.result[0].json.score, 15);
+  assert.equal(cold.result[0].json.temperature, 'lead-frio');
+}
+
+{
+  const actionBudget = await run(payload('1', [
+    'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-acao-exposicao',
+    'qualificacao-incompleta', 'triagem-qual-modalidade'
+  ]));
+  assert.ok(actionBudget.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('triagem-qual-orcamento-livre')));
+  const actionTimeline = await run(payload('R$ 5.000', [
+    'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-acao-exposicao',
+    'qualificacao-incompleta', 'qual-modalidade-locacao', 'triagem-qual-orcamento-livre'
+  ]));
+  assert.ok(actionTimeline.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('qual-orcamento-validar')
+    && call.body.labels.includes('triagem-qual-prazo')));
+}
+
+{
   const reminder = await run(payload('Olá', ['triagem-menu-principal', 'enviar-kanban', 'setor-novos-negocios', 'assunto-espaco-box']));
   assert.equal(reminder.result[0].json.route, 'broker-waiting-reminder');
   assert.ok(reminder.calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('triagem-lembrete-enviado')));
