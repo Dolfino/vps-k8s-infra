@@ -43,6 +43,9 @@ Inbox 10 uses a two-level service tree:
 - tenant option 7 (`CEOP e autorizações operacionais`) is assigned to the
   `ceop - central de operações` team (team 5), whose members are David
   Nascimento da Silva and David Silva;
+- incoming conversations from `WhatsApp - CEOP` (inbox 11) are labeled
+  `setor-ceop` and assigned to the same CEOP team, without displaying the
+  commercial menu;
 - store and product searches are assigned to commercial support;
 - marketing requests are assigned to the `marketing` team;
 - marketing option 6 (`Relacionamento com lojistas`) is assigned directly to

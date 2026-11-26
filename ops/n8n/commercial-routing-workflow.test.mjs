@@ -227,6 +227,19 @@ function payload(content, labels = [], overrides = {}) {
 }
 
 {
+  const ceopInbox = await run(payload('Olá', [], {
+    inbox: { id: 11 },
+    conversation: { id: 611, display_id: 611, inbox_id: 11, labels: [], status: 'open' }
+  }));
+  assert.equal(ceopInbox.result[0].json.route, 'whatsapp-ceop');
+  assert.ok(ceopInbox.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('setor-ceop')));
+  assert.ok(ceopInbox.calls.some(call => call.path.endsWith('/assignments')
+    && call.body.team_id === 5));
+  assert.ok(!ceopInbox.calls.some(call => call.path.endsWith('/messages')));
+}
+
+{
   const marketing = await run(payload('4', ['triagem-menu-principal']));
   assert.equal(marketing.result[0].json.route, 'marketing-menu');
   assert.ok(marketing.calls.some(call => call.path.endsWith('/assignments') && call.body.team_id === 1));

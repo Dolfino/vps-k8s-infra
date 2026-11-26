@@ -2,7 +2,7 @@ const routingCode = String.raw`
 const payload = $json.body || $json;
 const event = String(payload.event || '');
 const inboxId = Number(payload.inbox?.id || payload.conversation?.inbox_id || 0);
-if (![6, 10].includes(inboxId)) return [];
+if (![6, 10, 11].includes(inboxId)) return [];
 
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
 if (!conversationId) return [];
@@ -91,6 +91,12 @@ if (inboxId === 6) {
   await addLabels('assunto-relacionamento-lojistas');
   await assignAgent(7);
   return [{ json: { conversationId, route: 'cf-empreendedor-emily', ownerId: 7 } }];
+}
+
+if (inboxId === 11) {
+  await addLabels('setor-ceop');
+  await assignTeam(5);
+  return [{ json: { conversationId, route: 'whatsapp-ceop', teamId: 5 } }];
 }
 
 const mainMenu = 'Olá! 👋 Seja bem-vindo(a) ao atendimento do Centro Fashion Fortaleza.\n\n' +
