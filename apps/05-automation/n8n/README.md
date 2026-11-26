@@ -25,7 +25,9 @@ Inbox 10 uses a two-level service tree:
   does it receive the `enviar-kanban` label, avoiding incomplete Kanban cards;
 - `Quiosque` and `Espaco para acao ou exposicao` are assigned exclusively to
   Thalyta Carolyne Bernardo da Silva Marques (agent 20); store, box and an
-  undefined space remain in the five-broker rotation;
+  undefined space remain in the five-broker rotation; her Chatwoot account is
+  excluded from native automatic distribution and receives these leads by
+  explicit workflow assignment;
 - after the handoff, a new greeting receives one confirmation that a broker
   will continue the conversation; subsequent messages remain with the human;
 - `menu`, `novo assunto`, `outro assunto`, or `0` restarts the service tree
