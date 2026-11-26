@@ -30,7 +30,7 @@ spec:
       containers:
         - name: chatwoot-kanban
           # Multi-arch image produced by commit 63a7eca.
-          image: ghcr.io/dolfino/chatwoot-kanban@sha256:a4f24a65d5ee4a307928e2c3441124f6e71f024fdae14d01588bafd55806c52b
+          image: ghcr.io/dolfino/chatwoot-kanban@sha256:21217fb88e94600f5ac38a392b8bc82725d46e014d236e96feef8a6525b4edf0
           imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_URL
