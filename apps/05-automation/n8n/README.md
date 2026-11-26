@@ -40,6 +40,12 @@ Inbox 10 uses a two-level service tree:
 - resolving a conversation removes routing labels so a future message starts a
   new service tree.
 
+Leads marked as `recuperacao-ativa` are handled before the service tree. On the
+first customer reply, the workflow removes the active recovery and owner
+labels, adds `recuperacao-respondida`, assigns the conversation back to the
+original broker encoded in `recuperacao-corretor-{id}`, and moves the contact
+to `Em contato`. No bot menu or automatic message is sent in this path.
+
 Run the offline routing tests with:
 
 ```sh

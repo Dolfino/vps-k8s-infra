@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: chatwoot-kanban-recovery
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  schedule: "5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: OnFailure
+          automountServiceAccountToken: false
+          imagePullSecrets:
+            - name: ghcr-secret
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: tick
+              image: ghcr.io/dolfino/chatwoot-kanban@sha256:05737a28e8c89cb78c4dc0b3f18aa3578c250ad9741794f14c4353e8bdf29dc5
+              imagePullPolicy: IfNotPresent
+              command: ["python", "-c"]
+              args:
+                - |-
+                  import os
+                  import urllib.request
+
+                  request = urllib.request.Request(
+                      "http://chatwoot-kanban:8000/kanban/cron/tick",
+                      data=b"{}",
+                      method="POST",
+                      headers={
+                          "Content-Type": "application/json",
+                          "X-Kanban-Token": os.environ["KANBAN_APP_TOKEN"],
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=300) as response:
+                      print(response.read().decode())
+              env:
+                - name: KANBAN_APP_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: chatwoot-kanban-runtime-auth
+                      key: KANBAN_APP_TOKEN
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi

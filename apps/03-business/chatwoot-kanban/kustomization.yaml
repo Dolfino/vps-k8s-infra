@@ -5,6 +5,7 @@ namespace: business
 
 resources:
   - configmap.yaml
+  - cronjob.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

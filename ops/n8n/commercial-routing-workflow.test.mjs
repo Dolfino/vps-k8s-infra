@@ -21,7 +21,7 @@ async function run(body) {
         let data = '';
         request.write = chunk => { data += chunk; };
         request.end = () => {
-          calls.push({ path: options.path, body: JSON.parse(data) });
+          calls.push({ path: options.path, method: options.method, body: JSON.parse(data) });
           const response = new EventEmitter();
           response.statusCode = 200;
           callback(response);
@@ -50,6 +50,24 @@ function payload(content, labels = [], overrides = {}) {
   assert.ok(calls.some(call => call.path.endsWith('/labels') && call.body.labels.includes('triagem-menu-principal')));
   assert.ok(calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('1️⃣ Quero comprar ou alugar')));
   assert.ok(calls.some(call => call.path.endsWith('/messages') && call.body.content.includes('digite 0 ou MENU')));
+}
+
+{
+  const recovery = await run(payload('Ainda tenho interesse', [
+    'enviar-kanban', 'setor-novos-negocios', 'recuperacao-ativa',
+    'recuperacao-corretor-11'
+  ], { sender: { id: 321 } }));
+  assert.equal(recovery.result[0].json.route, 'recovery-replied');
+  assert.equal(recovery.result[0].json.ownerId, 11);
+  assert.ok(recovery.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('recuperacao-respondida')
+    && !call.body.labels.includes('recuperacao-ativa')));
+  assert.ok(recovery.calls.some(call => call.path.endsWith('/assignments')
+    && call.body.assignee_id === 11));
+  assert.ok(recovery.calls.some(call => call.path.endsWith('/contacts/321')
+    && call.method === 'PATCH'
+    && call.body.custom_attributes.pipeline_01_etapas === 'Em contato'));
+  assert.ok(!recovery.calls.some(call => call.path.endsWith('/messages')));
 }
 
 {

@@ -6,6 +6,7 @@ if (inboxId !== 10) return [];
 
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
 if (!conversationId) return [];
+const contactId = Number(payload.sender?.id || payload.conversation?.meta?.sender?.id || 0);
 const existingLabels = (payload.conversation?.labels || [])
   .map(label => typeof label === 'string' ? label : label?.title).filter(Boolean);
 const isIncomingMessage = event === 'message_created' && String(payload.message_type).toLowerCase() === 'incoming';
@@ -17,10 +18,10 @@ const fs = require('fs');
 const token = fs.readFileSync('/run/secrets/chatwoot/token', 'utf8').trim();
 if (!token) throw new Error('CHATWOOT_BOT_TOKEN unavailable');
 const http = require('http');
-function request(path, body) {
+function request(path, body, method = 'POST') {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
-    const req = http.request({ hostname: 'chatwoot.business.svc.cluster.local', port: 3000, path, method: 'POST', headers: {
+    const req = http.request({ hostname: 'chatwoot.business.svc.cluster.local', port: 3000, path, method, headers: {
       api_access_token: token, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data)
     }}, res => { let response = ''; res.on('data', chunk => response += chunk); res.on('end', () => {
       if (res.statusCode < 200 || res.statusCode >= 300) return reject(new Error('Chatwoot ' + res.statusCode + ': ' + response.slice(0, 200)));
@@ -67,6 +68,24 @@ const setQualificationStep = async (nextStep, ...answerLabels) => {
 const assignAgent = assigneeId => request(base + '/assignments', { team_id: 2, assignee_id: assigneeId });
 const assignTeam = teamId => request(base + '/assignments', { team_id: teamId });
 const send = content => request(base + '/messages', { content, message_type: 'outgoing', private: false });
+
+if (isIncomingMessage && existingLabels.includes('recuperacao-ativa')) {
+  const ownerLabel = existingLabels.find(label => label.startsWith('recuperacao-corretor-')) || '';
+  const ownerId = Number(ownerLabel.replace('recuperacao-corretor-', '')) || 0;
+  const recoveryLabels = existingLabels.filter(label =>
+    label !== 'recuperacao-ativa'
+    && label !== 'recuperacao-respondida'
+    && !label.startsWith('recuperacao-corretor-'));
+  recoveryLabels.push('recuperacao-respondida');
+  await request(base + '/labels', { labels: [...new Set(recoveryLabels)] });
+  if (ownerId) await assignAgent(ownerId);
+  if (contactId) {
+    await request('/api/v1/accounts/1/contacts/' + contactId, {
+      custom_attributes: { pipeline_01_etapas: 'Em contato' }
+    }, 'PATCH');
+  }
+  return [{ json: { conversationId, contactId, route: 'recovery-replied', ownerId } }];
+}
 
 const mainMenu = 'Olá! 👋 Seja bem-vindo(a) ao atendimento do Centro Fashion Fortaleza.\n\n' +
   'Para direcionarmos sua solicitação ao setor responsável, escolha uma opção:\n\n' +
