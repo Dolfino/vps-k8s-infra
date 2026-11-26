@@ -2,7 +2,7 @@ const routingCode = String.raw`
 const payload = $json.body || $json;
 const event = String(payload.event || '');
 const inboxId = Number(payload.inbox?.id || payload.conversation?.inbox_id || 0);
-if (inboxId !== 10) return [];
+if (![6, 10].includes(inboxId)) return [];
 
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
 if (!conversationId) return [];
@@ -85,6 +85,12 @@ if (isIncomingMessage && existingLabels.includes('recuperacao-ativa')) {
     }, 'PATCH');
   }
   return [{ json: { conversationId, contactId, route: 'recovery-replied', ownerId } }];
+}
+
+if (inboxId === 6) {
+  await addLabels('setor-ceop');
+  await assignAgent(7);
+  return [{ json: { conversationId, route: 'cf-empreendedor-emily', ownerId: 7 } }];
 }
 
 const mainMenu = 'Olá! 👋 Seja bem-vindo(a) ao atendimento do Centro Fashion Fortaleza.\n\n' +
@@ -365,14 +371,14 @@ if (state === 'tenant') {
     '1': ['setor-contratos', 'Contratos'], '2': ['setor-financeiro', 'Financeiro, boletos de CDU ou manutenção'],
     '3': ['setor-renegociacao', 'Renegociação financeira'], '4': ['setor-titularidade-migracao', 'Troca de titularidade ou migração'],
     '5': ['setor-repasse-pos-venda', 'Repasse ou pós-venda'], '6': ['setor-distrato', 'Distrato'],
-    '7': ['setor-ceop', 'CEOP e autorizações operacionais'], '8': ['setor-lojista-outros', 'Outro assunto relacionado à loja']
+    '7': ['setor-ceop', 'CEOP e autorizações operacionais', 7], '8': ['setor-lojista-outros', 'Outro assunto relacionado à loja']
   };
   const selected = routes[numericChoice];
   if (!selected) {
     await send('Não consegui identificar essa opção. Por favor, digite um número de 1 a 8.\n\n' + tenantMenu);
     return [{ json: { conversationId, route: 'invalid-tenant-option' } }];
   }
-  await completeLabels(selected[0]); await assignAgent(14);
+  await completeLabels(selected[0]); await assignAgent(selected[2] || 14);
   await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi registrada.\n\nInforme seu nome, o nome da loja e o número do box ou loja, se souber. A equipe comercial fará o encaminhamento ao setor responsável.');
   return [{ json: { conversationId, route: selected[0] } }];
 }
