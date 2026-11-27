@@ -60,18 +60,3 @@ visíveis ao corretor responsável e compartilhar a etapa `Perdido` com o time
 comercial.
 
 O `secret-example.yaml` e estes manifestos não contêm credenciais reais.
-
-## Quadros por time e cadastro manual
-
-O Chatwoot usa os times Comercial (2), Hotel (3) e Financeiro (4). Os quadros
-setoriais exigem vínculo com o time e com o canal da conversa. O quadro
-Comercial preserva as etapas do atributo de contato existente.
-
-O botão **Novo lead** no Kanban web usa o canal API **Cadastro manual de
-leads** (12), sem distribuição automática ou webhook de saída. A
-configuração efetiva dos canais automáticos foi conferida antes do deploy:
-`KANBAN_AUTO_INBOX_IDS=9`. A release mantém esse valor.
-
-Para reverter a ativação, reverta a revisão GitOps que adiciona as configurações
-e fixa o novo digest no Deployment e no CronJob. Preserve os contatos,
-conversas, etapas e reservas criados durante o uso.
