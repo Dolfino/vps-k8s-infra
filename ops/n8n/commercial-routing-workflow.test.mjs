@@ -242,16 +242,35 @@ function payload(content, labels = [], overrides = {}) {
 {
   const marketing = await run(payload('4', ['triagem-menu-principal']));
   assert.equal(marketing.result[0].json.route, 'marketing-menu');
-  assert.ok(marketing.calls.some(call => call.path.endsWith('/assignments') && call.body.team_id === 1));
+  assert.ok(marketing.calls.some(call => call.path.endsWith('/assignments') && call.body.team_id === 6));
+
+  const media = await run(payload('1', ['triagem-menu-principal', 'triagem-marketing']));
+  assert.equal(media.result[0].json.route, 'assunto-midia-paga');
+  assert.ok(media.calls.some(call => call.path.endsWith('/assignments') && call.body.assignee_id === 20));
+
   const action = await run(payload('3', ['triagem-menu-principal', 'triagem-marketing']));
   assert.equal(action.result[0].json.route, 'assunto-acoes-promocionais');
+  assert.ok(action.calls.some(call => call.path.endsWith('/assignments') && call.body.team_id === 6));
 
   const relationship = await run(payload('6', ['triagem-menu-principal', 'triagem-marketing']));
   assert.equal(relationship.result[0].json.route, 'assunto-relacionamento-lojistas');
   assert.ok(relationship.calls.some(call => call.path.endsWith('/assignments')
     && call.body.assignee_id === 7));
   assert.ok(!relationship.calls.some(call => call.path.endsWith('/assignments')
-    && call.body.team_id === 1));
+    && call.body.team_id === 6));
+}
+
+{
+  const marketingInbox = await run(payload('Olá', [], {
+    inbox: { id: 8 },
+    conversation: { id: 608, display_id: 608, inbox_id: 8, labels: [], status: 'open' }
+  }));
+  assert.equal(marketingInbox.result[0].json.route, 'whatsapp-marketing-3');
+  assert.ok(marketingInbox.calls.some(call => call.path.endsWith('/labels')
+    && call.body.labels.includes('setor-marketing')));
+  assert.ok(marketingInbox.calls.some(call => call.path.endsWith('/assignments')
+    && call.body.team_id === 6));
+  assert.ok(!marketingInbox.calls.some(call => call.path.endsWith('/messages')));
 }
 
 {

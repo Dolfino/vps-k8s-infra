@@ -2,7 +2,7 @@ const routingCode = String.raw`
 const payload = $json.body || $json;
 const event = String(payload.event || '');
 const inboxId = Number(payload.inbox?.id || payload.conversation?.inbox_id || 0);
-if (![6, 10, 11].includes(inboxId)) return [];
+if (![6, 8, 10, 11].includes(inboxId)) return [];
 
 const conversationId = Number(payload.conversation?.display_id || payload.conversation?.id || 0);
 if (!conversationId) return [];
@@ -91,6 +91,12 @@ if (inboxId === 6) {
   await addLabels('assunto-relacionamento-lojistas');
   await assignAgent(7);
   return [{ json: { conversationId, route: 'cf-empreendedor-emily', ownerId: 7 } }];
+}
+
+if (inboxId === 8) {
+  await addLabels('setor-marketing');
+  await assignTeam(6);
+  return [{ json: { conversationId, route: 'whatsapp-marketing-3', teamId: 6 } }];
 }
 
 if (inboxId === 11) {
@@ -345,7 +351,7 @@ if (state === 'main') {
     return [{ json: { conversationId, route: 'catalog-menu' } }];
   }
   if (numericChoice === '4') {
-    await addLabels('triagem-marketing'); await assignTeam(1); await send(marketingMenu);
+    await addLabels('triagem-marketing'); await assignTeam(6); await send(marketingMenu);
     return [{ json: { conversationId, route: 'marketing-menu' } }];
   }
   if (numericChoice === '5') {
@@ -409,7 +415,7 @@ if (state === 'catalog') {
 
 if (state === 'marketing') {
   const routes = {
-    '1': ['assunto-midia-paga', 'mídia paga e exposição de marca'], '2': ['assunto-divulgacao-campanhas', 'divulgação e campanhas'],
+    '1': ['assunto-midia-paga', 'mídia paga e exposição de marca', 20], '2': ['assunto-divulgacao-campanhas', 'divulgação e campanhas'],
     '3': ['assunto-acoes-promocionais', 'autorização para ações promocionais'], '4': ['assunto-inauguracao', 'divulgação de inauguração'],
     '5': ['assunto-parcerias-eventos', 'parcerias e eventos'], '6': ['assunto-relacionamento-lojistas', 'relacionamento com lojistas', 7],
     '7': ['assunto-marketing-outros', 'outro assunto de Marketing']
@@ -421,7 +427,7 @@ if (state === 'marketing') {
   }
   await completeLabels(selected[0]);
   if (selected[2]) await assignAgent(selected[2]);
-  else await assignTeam(1);
+  else await assignTeam(6);
   await send('Entendi! Sua solicitação sobre ' + selected[1] + ' foi encaminhada à equipe de Marketing. Descreva os detalhes para continuarmos o atendimento.');
   return [{ json: { conversationId, route: selected[0] } }];
 }

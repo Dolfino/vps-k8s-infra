@@ -47,7 +47,13 @@ Inbox 10 uses a two-level service tree:
   `setor-ceop` and assigned to the same CEOP team, without displaying the
   commercial menu;
 - store and product searches are assigned to commercial support;
-- marketing requests are assigned to the `marketing` team;
+- marketing option 1 (`Mídia paga e exposição de marca`) is assigned directly
+  to Thalyta Carolyne Bernardo da Silva Marques (agent 20);
+- marketing options 2, 3, 4, 5 and 7 are assigned to the dedicated
+  `marketing - ações` team (team 6), composed of David Nascimento da Silva,
+  David Silva and Wendel; direct conversations from `WhatsApp - Marketing 3`
+  (inbox 8) are assigned to the same team without displaying the commercial
+  menu;
 - marketing option 6 (`Relacionamento com lojistas`) is assigned directly to
   Emily Viana Cunha (agent 7); incoming conversations from `WhatsApp - CF
   Empreendedor` (inbox 6) are also labeled `assunto-relacionamento-lojistas`
