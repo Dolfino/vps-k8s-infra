@@ -21,8 +21,8 @@ spec:
         - name: ghcr-secret
       containers:
         - name: web
-          image: ghcr.io/dolfino/sistema-centro-fashion-web:latest
-          imagePullPolicy: Always
+          image: ghcr.io/dolfino/sistema-centro-fashion-web@sha256:1da4796fa1508b22f0c6f6195d610b0fc31ac9eb7ae19a1d7711fbad803090df
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 80
@@ -70,8 +70,8 @@ spec:
         - name: ghcr-secret
       containers:
         - name: api
-          image: ghcr.io/dolfino/sistema-centro-fashion-api:latest
-          imagePullPolicy: Always
+          image: ghcr.io/dolfino/sistema-centro-fashion-api@sha256:0a6207dcd1fa222a275d66ce5342dc1e63557a1c1108c1ef883f63f43a063117
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 3000

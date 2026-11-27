@@ -85,4 +85,13 @@ Os convites de confirmacao foram processados pelo SMTP sem erro. Antes do
 onboarding foi criado e validado o dump
 `/root/backups/commercial-team-20261124T145754Z/chatwoot_production.dump`.
 
+Em 2026-11-26 foi criada a conta de treinamento
+`juliabarros@centrofashion.com` (agente 19), vinculada ao time `comercial` e
+aos inboxes 9 e 10 com as mesmas capacidades operacionais de um corretor. A
+conta permanece fora do rodizio: nao integra a lista fixa de corretores do
+workflow e `AccountUser.accepts_conversations` foi definido como `false`, o
+que a exclui tambem da distribuicao automatica nativa do Chatwoot. O backup
+anterior a alteracao esta em
+`/root/backups/training-user-20261126T083034Z/chatwoot_production.dump`.
+
 Após revisar a prévia, acrescentar `--apply` para gravar a alteração. O token continua desnecessário enquanto o CNAME atual estiver correto.
