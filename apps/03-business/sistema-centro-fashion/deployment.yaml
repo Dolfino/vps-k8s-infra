@@ -21,7 +21,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: web
-          image: ghcr.io/dolfino/sistema-centro-fashion-web@sha256:1da4796fa1508b22f0c6f6195d610b0fc31ac9eb7ae19a1d7711fbad803090df
+          image: ghcr.io/dolfino/sistema-centro-fashion-web@sha256:bd05c8282ae12fcfbcef450bd155aabb266bec4e7b551a21b1bfa7a07c1d90c9
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
