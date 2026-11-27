@@ -11,3 +11,8 @@ data:
   KANBAN_ENTRY_LABEL: enviar-kanban
   KANBAN_AUTO_INBOX_IDS: "9"
   KANBAN_BOARD_CACHE_TTL: "60"
+  KANBAN_COMMERCIAL_TEAM_ID: "2"
+  KANBAN_MANUAL_LEAD_TEAM_ID: "2"
+  KANBAN_MANUAL_LEAD_INBOX_ID: "12"
+  KANBAN_TEAM_BOARDS: >-
+    {"4":{"name":"Financeiro","stages":["Pendente","Em análise","Aguardando pagamento","Pago","Cancelado"]},"3":{"name":"Hotel","stages":["Solicitação","Verificando disponibilidade","Reserva confirmada","Check-in","Finalizado"]}}
