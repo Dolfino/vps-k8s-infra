@@ -19,4 +19,6 @@ data:
   KANBAN_MANUAL_LEAD_TEAM_ID: "2"
   KANBAN_MANUAL_LEAD_INBOX_ID: "12"
   KANBAN_TEAM_BOARDS: >-
-    {"4":{"name":"Financeiro","stages":["Pendente","Em análise","Aguardando pagamento","Pago","Cancelado"]},"3":{"name":"Hotel","stages":["Solicitação","Verificando disponibilidade","Reserva confirmada","Check-in","Finalizado"]}}
+    {"4":{"name":"Financeiro","stages":["Pendente","Em análise","Aguardando pagamento","Pago","Cancelado"]},"3":{"name":"Hotel","stages":["Solicitação","Verificando disponibilidade","Reserva confirmada","Check-in","Finalizado"]},
+    "101":{"name":"Marketing","inbox_ids":[1,2,7,8],"stages":["Novo","Em atendimento","Concluído"]},
+    "102":{"name":"CF Empreendedor","inbox_ids":[6],"stages":["Novo","Em atendimento","Concluído"]}}
