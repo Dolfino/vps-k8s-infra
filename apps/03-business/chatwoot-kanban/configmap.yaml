@@ -11,6 +11,10 @@ data:
   KANBAN_ENTRY_LABEL: enviar-kanban
   KANBAN_AUTO_INBOX_IDS: "9"
   KANBAN_BOARD_CACHE_TTL: "60"
+  KANBAN_HIDE_OVERVIEW_EMAILS: >-
+    ["otaciliocarmo@centrofashion.com", "gleisianisilva@centrofashion.com",
+    "francisconascimento@centrofashion.com", "gilvaniamacedo@centrofashion.com",
+    "dayanelopes@centrofashion.com", "juliabarros@centrofashion.com"]
   KANBAN_COMMERCIAL_TEAM_ID: "2"
   KANBAN_MANUAL_LEAD_TEAM_ID: "2"
   KANBAN_MANUAL_LEAD_INBOX_ID: "12"
