@@ -83,6 +83,7 @@ env:
   STORAGE_REGION: us-east-1
   STORAGE_FORCE_PATH_STYLE: "true"
   FRONTEND_URL: https://chatwoot.ideiasmkt.com.br
+  KANBAN_HIDE_MOBILE_LAUNCHER_MEMBERSHIPS: "9,10,11,12,13,19"
   FORCE_SSL: "false"
   ENABLE_ACCOUNT_SIGNUP: "false"
   INSTALLATION_ENV: helm
