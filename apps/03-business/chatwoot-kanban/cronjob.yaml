@@ -27,7 +27,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: tick
-              image: ghcr.io/dolfino/chatwoot-kanban@sha256:8f040d792818af2dd8d92a4b527302988f6a597d9842a5bf6482a97ba26ebaf6
+              image: ghcr.io/dolfino/chatwoot-kanban@sha256:a61c4bbbce4dc37745f0f02d958f090df6c5608966377a9279fb0b1e0fc9896b
               imagePullPolicy: IfNotPresent
               command: ["python", "-c"]
               args:
