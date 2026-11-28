@@ -2,7 +2,7 @@
 # Credentials are supplied by the SOPS-managed chatwoot-runtime-auth Secret.
 image:
   repository: ghcr.io/dolfino/chatwoot-ideiasmkt
-  tag: v4.20.1-native@sha256:72c3dbb619d16bc3b9949a17df056f690bf7640dddd5aeca6e1d1336e4064160
+  tag: v4.20.1-native@sha256:839e979716212d1708beba685fb4669aedb7d816d352b6d93ce8899730e57160
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
